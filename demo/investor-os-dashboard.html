@@ -63,6 +63,13 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .mover{display:flex;justify-content:space-between;padding:9px 2px;border-bottom:1px solid var(--line);font-size:13.5px}
 .mover:last-child{border-bottom:none}
 .mover .mv{font-variant-numeric:tabular-nums}
+.htable{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums}
+.htable th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+  text-align:right;padding:8px 10px;border-bottom:1px solid var(--line);font-weight:600}
+.htable th:first-child,.htable td:first-child{text-align:left}
+.htable td{padding:10px;text-align:right;border-bottom:1px solid var(--line)}
+.htable tr:last-child td{border-bottom:none}
+.grp-title{font-size:12px;color:var(--gold);letter-spacing:.08em;margin:4px 0 10px;text-transform:uppercase;font-weight:600}
 @media (max-width:860px){
   .app{grid-template-columns:1fr}
   .two-col{grid-template-columns:1fr}
@@ -114,7 +121,7 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
         <div class="panel"><h2>Top Movers Today</h2><div id="movers"></div></div>
       </div>
     </section>
-    <section id="view-holdings" class="view"></section>
+    <section id="view-holdings" class="view"><div id="holdings-groups"></div></section>
     <section id="view-brief" class="view"></section>
     <section id="view-alerts" class="view"></section>
     <section id="view-profile" class="view"></section>
@@ -203,6 +210,11 @@ function switchView(id){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===id));
 }
 document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>switchView(b.dataset.view)));
+// Deep-link: open dashboard directly on a view, e.g. …dashboard.html#view-brief
+addEventListener('DOMContentLoaded', ()=>{
+  const h = location.hash.slice(1);
+  if(h.startsWith('view-') && document.getElementById(h)) switchView(h);
+});
 </script>
 <script>
 (function(){
@@ -303,6 +315,31 @@ document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>
   document.getElementById('movers').innerHTML = pick.map(h=>
     `<div class="mover"><span>${h.name}</span>
      <span class="mv ${h.day>=0?'up':'down'}">${pct(h.day)} · ${inrShort(val(h))}</span></div>`).join('');
+})();
+</script>
+<script>
+(function(){
+  const GROUPS = [['equity','Direct Equity (NSE)'],['mf','Mutual Funds'],['gold','Gold'],['debt','Debt & FD'],['cash','Cash']];
+  let html = '';
+  for(const [k,title] of GROUPS){
+    const rows = PORTFOLIO.holdings.filter(h=>h.cls===k);
+    const sub = rows.reduce((a,h)=>a+val(h),0);
+    html += `<div class="panel"><div class="grp-title">${title} — ${inrShort(sub)}</div>
+      <div style="overflow-x:auto"><table class="htable">
+      <tr><th>Instrument</th><th>Qty</th><th>Avg Cost</th><th>LTP / NAV</th><th>Value</th><th>P/L %</th><th>Day</th></tr>` +
+      rows.map(h=>{
+        const plPct = (h.ltp-h.avg)/h.avg*100;
+        const simple = (k==='debt'||k==='cash');
+        return `<tr><td>${h.name}</td>
+          <td>${simple?'—':h.qty.toLocaleString('en-IN')}</td>
+          <td>${simple?'—':'₹'+h.avg.toLocaleString('en-IN')}</td>
+          <td>${simple?'—':'₹'+h.ltp.toLocaleString('en-IN')}</td>
+          <td>${inrShort(val(h))}</td>
+          <td class="${simple?'muted':(plPct>=0?'up':'down')}">${simple?'—':pct(plPct)}</td>
+          <td class="${simple?'muted':(h.day>=0?'up':'down')}">${simple?'—':pct(h.day)}</td></tr>`;
+      }).join('') + '</table></div></div>';
+  }
+  document.getElementById('holdings-groups').innerHTML = html;
 })();
 </script>
 </body>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paresh Karya — Investor OS (Demo)</title>
+<style>
+:root{
+  --bg:#0b0f16; --panel:#121826; --panel-2:#1a2233; --line:#232e42;
+  --text:#e9edf5; --muted:#8c99ae; --gold:#d4b06e; --gold-deep:#a98545;
+  --emerald:#3ecf8e; --red:#ef6a5f;
+  --font:"Segoe UI",-apple-system,"Inter",system-ui,sans-serif;
+  --serif:Georgia,"Times New Roman",serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh}
+.muted{color:var(--muted)}
+.up{color:var(--emerald)} .down{color:var(--red)}
+button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.app{display:grid;grid-template-columns:230px 1fr;min-height:100vh}
+.sidebar{background:var(--panel);border-right:1px solid var(--line);padding:24px 14px;position:sticky;top:0;height:100vh}
+.brand{font-family:var(--serif);font-size:16px;font-weight:600;letter-spacing:.14em;color:var(--gold);margin-bottom:3px}
+.brand-sub{font-size:11px;color:var(--muted);letter-spacing:.04em;margin-bottom:30px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.nav-btn{display:flex;align-items:center;gap:10px;width:100%;padding:11px 14px;margin-bottom:4px;
+  background:none;border:none;border-radius:10px;color:var(--muted);font-family:var(--font);
+  font-size:13.5px;cursor:pointer;text-align:left;transition:background .15s,color .15s}
+.nav-btn:hover{background:var(--panel-2);color:var(--text)}
+.nav-btn.active{background:var(--panel-2);color:var(--gold);font-weight:600}
+.main{padding:26px 34px;max-width:1180px}
+.topbar{display:flex;align-items:baseline;gap:14px;margin-bottom:24px;flex-wrap:wrap;
+  border-bottom:1px solid var(--line);padding-bottom:16px}
+.topbar h1{font-family:var(--serif);font-size:21px;font-weight:600;letter-spacing:.01em}
+.topbar .date{color:var(--muted);font-size:13px}
+.badge-demo{margin-left:auto;font-size:10.5px;letter-spacing:.14em;color:var(--gold);
+  border:1px solid var(--gold-deep);border-radius:99px;padding:4px 12px;opacity:.9}
+.view{display:none}
+.view.active{display:block;animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}
+}
+@media (max-width:860px){
+  .app{grid-template-columns:1fr}
+  .sidebar{position:static;height:auto;display:flex;overflow-x:auto;padding:10px;gap:4px}
+  .sidebar .nav-btn{white-space:nowrap;margin-bottom:0}
+  .brand,.brand-sub{display:none}
+  .main{padding:18px}
+  .badge-demo{margin-left:0}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">INVESTOR OS</div>
+    <div class="brand-sub">Private · Paresh Karya</div>
+    <button class="nav-btn active" data-view="view-overview">◈ Overview</button>
+    <button class="nav-btn" data-view="view-holdings">▤ Holdings</button>
+    <button class="nav-btn" data-view="view-brief">⚡ Morning Brief</button>
+    <button class="nav-btn" data-view="view-alerts">📱 Alerts &amp; Phone</button>
+    <button class="nav-btn" data-view="view-profile">👤 Investor Profile</button>
+  </aside>
+  <main class="main">
+    <div class="topbar">
+      <h1>Paresh Karya — Investor OS</h1>
+      <span class="date">Monday, 6 July 2026 · 7:00 AM IST</span>
+      <span class="badge-demo">DEMO — SAMPLE DATA</span>
+    </div>
+    <section id="view-overview" class="view active"></section>
+    <section id="view-holdings" class="view"></section>
+    <section id="view-brief" class="view"></section>
+    <section id="view-alerts" class="view"></section>
+    <section id="view-profile" class="view"></section>
+  </main>
+</div>
+<script>
+function switchView(id){
+  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===id));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===id));
+}
+document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>switchView(b.dataset.view)));
+</script>
+</body>
+</html>

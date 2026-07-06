@@ -70,9 +70,31 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .htable td{padding:10px;text-align:right;border-bottom:1px solid var(--line)}
 .htable tr:last-child td{border-bottom:none}
 .grp-title{font-size:12px;color:var(--gold);letter-spacing:.08em;margin:4px 0 10px;text-transform:uppercase;font-weight:600}
+.btn-gold{background:linear-gradient(135deg,#d4b06e,#a98545);color:#14100a;border:none;border-radius:10px;
+  padding:10px 18px;font-family:var(--font);font-size:13.5px;font-weight:650;cursor:pointer}
+.btn-gold:hover{filter:brightness(1.08)}
+.btn-gold:disabled{opacity:.65;cursor:wait}
+.brief-out{white-space:pre-wrap;font-family:var(--font);font-size:13.5px;line-height:1.65;min-height:120px}
+.news{font-size:13.5px;line-height:1.7}
+.news p{margin:2px 0}
+.news-head{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:.05em;color:var(--gold)}
+.news-sub{color:var(--muted);font-size:12.5px;margin-bottom:10px}
+.news-sec{font-size:11px;letter-spacing:.1em;color:var(--muted);margin:14px 0 4px;font-weight:600}
+.alerts-grid{display:grid;grid-template-columns:300px 1fr;gap:22px;align-items:start}
+.phone{background:#05070b;border:2px solid var(--line);border-radius:34px;padding:12px;width:300px;margin:0 auto}
+.phone-notch{width:90px;height:18px;background:#05070b;border:2px solid var(--line);border-top:none;
+  border-radius:0 0 12px 12px;margin:-12px auto 8px}
+.phone-screen{background:#0e1621;border-radius:22px;min-height:480px;padding:12px;overflow:hidden}
+.tg-header{font-size:13px;font-weight:650;padding:6px 4px 12px;border-bottom:1px solid #1c2a3a;margin-bottom:12px}
+.tg-msg{background:#182533;border-radius:12px 12px 12px 4px;padding:10px 12px;font-size:12.5px;
+  line-height:1.55;margin-bottom:10px;opacity:0;transform:translateY(8px);transition:all .4s ease}
+.tg-msg.show{opacity:1;transform:none}
+.tg-time{display:block;font-size:10.5px;color:#6d829b;margin-top:6px;text-align:right}
+.howto{padding-left:18px;font-size:13.5px;line-height:1.9}
 @media (max-width:860px){
   .app{grid-template-columns:1fr}
   .two-col{grid-template-columns:1fr}
+  .alerts-grid{grid-template-columns:1fr}
   .sidebar{position:static;height:auto;display:flex;overflow-x:auto;padding:10px;gap:4px}
   .sidebar .nav-btn{white-space:nowrap;margin-bottom:0}
   .brand,.brand-sub{display:none}
@@ -122,8 +144,51 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
       </div>
     </section>
     <section id="view-holdings" class="view"><div id="holdings-groups"></div></section>
-    <section id="view-brief" class="view"></section>
-    <section id="view-alerts" class="view"></section>
+    <section id="view-brief" class="view">
+      <div class="panel">
+        <div class="panel-head"><h2>AI Morning Brief</h2>
+          <button id="gen-brief" class="btn-gold">⚡ Generate Morning Brief</button></div>
+        <pre id="brief-out" class="brief-out muted">Click “Generate Morning Brief” — the AI reads your portfolio, your investor one-pager, and overnight markets, then writes this for you every morning.</pre>
+      </div>
+      <div class="panel">
+        <h2>Weekly Newsletter (sample)</h2>
+        <div class="news">
+          <div class="news-head">THE WEEKLY BRIEF — Week 27, 2026</div>
+          <div class="news-sub">Portfolio ₹2.41 Cr · +0.9% this week · +22.6% unrealised overall</div>
+          <div class="news-sec">WHAT MOVED</div>
+          <p><span class="up">▲ TATAPOWER +5.2%</span> — capex approval for 2 GW solar pipeline</p>
+          <p><span class="up">▲ RELIANCE +2.1%</span> — AGM expectations building</p>
+          <p><span class="down">▼ TCS −6.8%</span> — Q1 miss; downgrades from 3 brokerages</p>
+          <div class="news-sec">NEWS YOU MAY HAVE MISSED</div>
+          <p>• SEBI circular on F&amp;O position limits — no impact on your cash-only book.</p>
+          <p>• New SGB redemption window opens 15 July — relevant to your 2019 tranche.</p>
+          <p>• Parag Parikh Flexi Cap raised overseas allocation to 28% — adds slight USD exposure to your MF book.</p>
+          <div class="news-sec">ONE THING TO ACT ON</div>
+          <p>Gold allocation at 16.9% vs your 10–14% band — trim decision pending your review.</p>
+        </div>
+      </div>
+    </section>
+    <section id="view-alerts" class="view">
+      <div class="alerts-grid">
+        <div class="phone">
+          <div class="phone-notch"></div>
+          <div class="phone-screen">
+            <div class="tg-header">✈️ Investor OS Bot</div>
+            <div id="tg-feed"></div>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>How this works</h2>
+          <ol class="howto">
+            <li>A free Telegram bot is created once (via BotFather — takes ~3 minutes).</li>
+            <li>Every morning at 7:00 AM the AI reads your portfolio + your one-pager + overnight news, and sends the brief to your phone.</li>
+            <li>Price and news alerts fire during market hours only for things that touch <em>your</em> holdings — no noise.</li>
+            <li>You reply to the bot to ask follow-up questions; answers use your full investor profile.</li>
+          </ol>
+          <p class="muted" style="font-size:12.5px;margin-top:12px">No app to build — Telegram is free and already on the phone. WhatsApp is possible later via the Business API.</p>
+        </div>
+      </div>
+    </section>
     <section id="view-profile" class="view"></section>
   </main>
 </div>
@@ -341,6 +406,58 @@ addEventListener('DOMContentLoaded', ()=>{
   }
   document.getElementById('holdings-groups').innerHTML = html;
 })();
+</script>
+<script>
+const BRIEF_TEXT = `MORNING BRIEF — Monday, 6 July 2026 · 7:00 AM IST
+
+MARKETS OVERNIGHT
+• Nifty 50 closed Friday at 26,840 (+0.4%); GIFT Nifty indicates a flat-to-positive open.
+• US markets mixed — S&P 500 +0.2%, Nasdaq −0.3% ahead of the July Fed minutes.
+• Brent at $78.4 (+1.8% for the week); gold at ₹7,420/g near all-time highs.
+
+IMPACT ON YOUR PORTFOLIO
+• TCS (120 shares, −4.2% Friday) — Q1 missed street estimates on BFSI weakness. You are now −6.4% vs cost. IT commentary pushes recovery to H2. Thesis check due.
+• RELIANCE (500 shares, +19% vs cost) — AGM next month; street expects new-energy capex announcements. No action needed.
+• HDFCBANK (800 shares) — RBI held the repo rate Friday; NIM pressure easing. Thesis intact.
+• Gold SGBs (+45.5%) — now 16.9% of portfolio vs your 10–14% band. The 2019 tranche is past its 5-year exit window; redemption is tax-free.
+
+SUGGESTED ACTIONS — checked against your one-pager
+1. TCS: your Rule 2 — “cut losers on thesis break, not price action.” Thesis strained, not broken. Wait for management commentary Wednesday; no panic action today.
+2. Gold: a ~₹8L trim from the 2019 SGB tranche brings allocation back inside band via the tax-free route.
+3. Cash at ₹24.6L (10.2%) is above your 8% floor — dry powder available if IT weakness spreads to quality names.
+
+Generated from: your holdings + your investor one-pager + overnight market data. (Demo — sample data.)`;
+
+function typewriteBrief(){
+  const out = document.getElementById('brief-out');
+  const btn = document.getElementById('gen-brief');
+  btn.disabled = true; btn.textContent = 'Analysing portfolio…';
+  out.classList.remove('muted'); out.textContent = '';
+  let i = 0;
+  const step = () => {
+    out.textContent = BRIEF_TEXT.slice(0, i);
+    i += 3;
+    if(i <= BRIEF_TEXT.length + 2) requestAnimationFrame(step);
+    else { btn.disabled = false; btn.textContent = '⚡ Generate Morning Brief'; }
+  };
+  setTimeout(step, 600);
+}
+document.getElementById('gen-brief').addEventListener('click', typewriteBrief);
+</script>
+<script>
+const TG_MSGS = [
+  {t:'7:00 AM', txt:'☀️ <b>Morning Brief — Mon 6 Jul</b><br>• Nifty flat-to-positive open expected<br>• TCS −4.2% Friday (you hold 120)<br>• Gold now 16.9% of portfolio — above your band<br>• Cash ₹24.6L (10.2%) — above floor<br>Full brief on your dashboard →'},
+  {t:'9:47 AM', txt:'⚠️ <b>Price alert: TCS ₹3,418 (−4.2%)</b> on Q1 earnings miss.<br>Your position: 120 shares, −6.4% vs cost.<br>Rule 2 reminder: thesis break, not price action.'},
+  {t:'1:15 PM', txt:'📰 <b>News: RBI keeps repo at 5.25%.</b><br>HDFCBANK +1.2%. NIM pressure easing — holding thesis intact.'},
+];
+function playAlerts(){
+  const feed = document.getElementById('tg-feed');
+  feed.innerHTML = TG_MSGS.map(m=>
+    `<div class="tg-msg">${m.txt}<span class="tg-time">${m.t} ✓✓</span></div>`).join('');
+  feed.querySelectorAll('.tg-msg').forEach((el,i)=>setTimeout(()=>el.classList.add('show'), 500 + i*900));
+}
+document.querySelector('[data-view="view-alerts"]').addEventListener('click', playAlerts);
+addEventListener('DOMContentLoaded', ()=>{ if(location.hash === '#view-alerts') playAlerts(); });
 </script>
 </body>
 </html>

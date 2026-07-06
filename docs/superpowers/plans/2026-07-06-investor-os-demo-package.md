@@ -55,7 +55,7 @@ Narrative facts reused across views (keep consistent): TCS −6.4% vs cost (Q1 m
 **Interfaces:**
 - Produces: view containers `#view-overview`, `#view-holdings`, `#view-brief`, `#view-alerts`, `#view-profile` (one visible at a time via class `active`); function `switchView(id)`; CSS custom properties listed below. Later tasks fill the empty views and append `<script>` logic before `</body>`.
 
-- [ ] **Step 1: Create the file with shell, tokens, nav, and view switching**
+- [x] **Step 1: Create the file with shell, tokens, nav, and view switching**
 
 ```html
 <!DOCTYPE html>
@@ -128,11 +128,11 @@ document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>
 </html>
 ```
 
-- [ ] **Step 2: Verify in browser**
+- [x] **Step 2: Verify in browser**
 
 Run: `start demo\investor-os-dashboard.html` (PowerShell). Expected: dark shell renders, header shows name/date/DEMO badge, all 5 sidebar buttons switch the (empty) views with the active highlight following.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add demo/investor-os-dashboard.html
@@ -149,7 +149,7 @@ git commit -m "feat(demo): dashboard shell, design tokens, sidebar navigation"
 **Interfaces:**
 - Produces (used by Tasks 3–6): `PORTFOLIO` (object), `inr(n)`, `inrShort(n)`, `pct(n)`, `computeTotals()` → `{totalValue, invested, unrealPL, unrealPLPct, dayPL, dayPLPct, cash, byClass:{equity,mf,gold,debt,cash}}`, `genSeries(points, startVal, endVal, seed)` → `number[]`, `SERIES` = `{ '1M':[], '3M':[], '6M':[], '1Y':[], 'ALL':[] }` all ending at `totalValue`.
 
-- [ ] **Step 1: Add the data + utils script**
+- [x] **Step 1: Add the data + utils script**
 
 ```html
 <script>
@@ -231,12 +231,12 @@ if(location.hash === '#selftest') addEventListener('DOMContentLoaded', runSelfTe
 </script>
 ```
 
-- [ ] **Step 2: Run the self-tests (this is the failing-test/passing-test cycle for a static page)**
+- [x] **Step 2: Run the self-tests (this is the failing-test/passing-test cycle for a static page)**
 
 Run: `start "" "demo\investor-os-dashboard.html#selftest"`
 Expected: green banner **"SELFTEST: 6/6 passed"**. If red, the data object has a typo — fix until 6/6.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add demo/investor-os-dashboard.html
@@ -254,7 +254,7 @@ git commit -m "feat(demo): portfolio data layer, INR formatters, chart series, s
 - Consumes: `computeTotals()`, `SERIES`, `inrShort`, `inr`, `pct`, `PORTFOLIO`, `val`.
 - Produces: `renderAreaChart(rangeKey)` and `renderDonut()` (only used within this view).
 
-- [ ] **Step 1: Add Overview markup inside `#view-overview`**
+- [x] **Step 1: Add Overview markup inside `#view-overview`**
 
 ```html
 <div class="cards" id="hero-cards"></div>
@@ -277,7 +277,7 @@ git commit -m "feat(demo): portfolio data layer, INR formatters, chart series, s
 </div>
 ```
 
-- [ ] **Step 2: Add Overview CSS to the style block**
+- [x] **Step 2: Add Overview CSS to the style block**
 
 ```css
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:18px}
@@ -301,7 +301,7 @@ git commit -m "feat(demo): portfolio data layer, INR formatters, chart series, s
 .mover:last-child{border-bottom:none}
 ```
 
-- [ ] **Step 3: Add the Overview render script**
+- [x] **Step 3: Add the Overview render script**
 
 ```html
 <script>
@@ -363,11 +363,11 @@ git commit -m "feat(demo): portfolio data layer, INR formatters, chart series, s
 </script>
 ```
 
-- [ ] **Step 4: Verify**
+- [x] **Step 4: Verify**
 
 Open the file. Expected on Overview: Total Value **₹2.41 Cr**, Unrealised P/L **₹26.25 L (+22.6%)**, Cash **₹24.6 L (10.2%)**; gold area chart redraws when clicking 1M/3M/6M/1Y/ALL; donut legend shows equity 21.3 / MF 20.8 / gold 16.9 / debt 30.7 / cash 10.2; movers show TATAPOWER +2.1% and TCS −4.2%. Re-open with `#selftest` → still 6/6.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add demo/investor-os-dashboard.html
@@ -384,7 +384,7 @@ git commit -m "feat(demo): overview view — hero metrics, SVG area chart, donut
 **Interfaces:**
 - Consumes: `PORTFOLIO`, `val`, `cost`, `inr`, `inrShort`, `pct`.
 
-- [ ] **Step 1: Add markup + CSS**
+- [x] **Step 1: Add markup + CSS**
 
 Markup inside `#view-holdings`:
 ```html
@@ -401,7 +401,7 @@ CSS to add:
 .grp-title{font-size:13px;color:var(--gold);letter-spacing:.06em;margin:4px 0 10px;text-transform:uppercase}
 ```
 
-- [ ] **Step 2: Add render script**
+- [x] **Step 2: Add render script**
 
 ```html
 <script>
@@ -431,11 +431,11 @@ CSS to add:
 </script>
 ```
 
-- [ ] **Step 3: Verify**
+- [x] **Step 3: Verify**
 
 Holdings view shows 5 grouped panels; TCS row red at **−6.4%** P/L and **−4.2%** day; SGB shows **+45.5%**; debt/cash rows show em-dashes. Table scrolls horizontally on narrow window rather than breaking layout.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add demo/investor-os-dashboard.html
@@ -453,7 +453,7 @@ git commit -m "feat(demo): holdings view grouped by asset class"
 - Consumes: none beyond Task-1 shell (copy is static).
 - Produces: `typewriteBrief()` bound to the generate button.
 
-- [ ] **Step 1: Add markup + CSS**
+- [x] **Step 1: Add markup + CSS**
 
 Markup inside `#view-brief`:
 ```html
@@ -494,7 +494,7 @@ CSS:
 .news-sec{font-size:11px;letter-spacing:.1em;color:var(--muted);margin:14px 0 4px}
 ```
 
-- [ ] **Step 2: Add the brief text + typewriter script (this exact copy)**
+- [x] **Step 2: Add the brief text + typewriter script (this exact copy)**
 
 ```html
 <script>
@@ -536,11 +536,11 @@ document.getElementById('gen-brief').addEventListener('click', typewriteBrief);
 </script>
 ```
 
-- [ ] **Step 3: Verify**
+- [x] **Step 3: Verify**
 
 Click the button: label flips to "Analysing portfolio…", brief types out smoothly (~4–6 s), button re-enables after. Newsletter card renders below with gold/emerald/red accents. Numbers agree with Overview (16.9%, ₹24.6L, −6.4%).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add demo/investor-os-dashboard.html
@@ -558,7 +558,7 @@ git commit -m "feat(demo): morning brief typewriter + weekly newsletter sample"
 - Consumes: Task-1 `switchView` behaviour (animation triggers when view becomes visible).
 - Produces: `playAlerts()`; nav button for `view-alerts` gets an extra listener to replay the sequence.
 
-- [ ] **Step 1: Add markup + CSS**
+- [x] **Step 1: Add markup + CSS**
 
 Markup inside `#view-alerts`:
 ```html
@@ -598,7 +598,7 @@ CSS:
 .howto{padding-left:18px;font-size:13.5px;line-height:1.9}
 ```
 
-- [ ] **Step 2: Add messages + sequencing script (this exact copy)**
+- [x] **Step 2: Add messages + sequencing script (this exact copy)**
 
 ```html
 <script>
@@ -617,11 +617,11 @@ document.querySelector('[data-view="view-alerts"]').addEventListener('click', pl
 </script>
 ```
 
-- [ ] **Step 3: Verify**
+- [x] **Step 3: Verify**
 
 Click "Alerts & Phone" in the sidebar: three Telegram bubbles slide in one after another inside the phone frame; timestamps + ✓✓ ticks visible; clicking the nav button again replays. "How this works" panel renders beside (stacks below on narrow width).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add demo/investor-os-dashboard.html
@@ -638,7 +638,7 @@ git commit -m "feat(demo): alerts view — phone frame with sequenced Telegram m
 **Interfaces:**
 - Produces: the sample profile content. Task 8 renders a condensed version of THIS content in the dashboard — keep names/numbers identical (bands 10–14% gold, 8% cash floor, Rule 2 wording, no-F&O rule).
 
-- [ ] **Step 1: Create the file with exactly this content**
+- [x] **Step 1: Create the file with exactly this content**
 
 ```markdown
 # Investor One-Pager — A. Mehta  *(SAMPLE — fictional profile for demonstration)*
@@ -699,11 +699,11 @@ Three books. Tactical (under 1 year) — small, opportunistic, capped. Core (5�
 *Reviewed quarterly. Material changes require a 7-day cooldown before execution.*
 ```
 
-- [ ] **Step 2: Verify**
+- [x] **Step 2: Verify**
 
 Read the file once top-to-bottom: no `[bracketed]` placeholders remain; the numbers match the dashboard narrative (gold band 10–14%, cash floor 8%, Rule 2 = thesis-break rule, 15% position cap).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add prompts/sample-investor-one-pager.md
@@ -720,7 +720,7 @@ git commit -m "feat(prompts): sample investor one-pager (fictional, Indian conte
 **Interfaces:**
 - Consumes: content of `prompts/sample-investor-one-pager.md` (Task 7) — condensed, verbatim phrasing.
 
-- [ ] **Step 1: Add markup inside `#view-profile` + CSS**
+- [x] **Step 1: Add markup inside `#view-profile` + CSS**
 
 ```html
 <div class="callout">
@@ -765,11 +765,11 @@ CSS:
 .op-title{font-size:16px;font-weight:650}
 ```
 
-- [ ] **Step 2: Verify**
+- [x] **Step 2: Verify**
 
 Profile view shows the green intro callout, the condensed one-pager, and the gold "how Sir gets his own version" callout. Wording matches Task 7's file (bands, rules).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add demo/investor-os-dashboard.html
@@ -787,13 +787,13 @@ git commit -m "feat(demo): investor profile view with one-pager and explainer ca
 - Consumes: `ASSET INVESTOR PROMPT.md` (repo root, reference — do not modify it).
 - Produces: the file Paresh pastes into Claude.ai/ChatGPT.
 
-- [ ] **Step 1: Copy the reference file**
+- [x] **Step 1: Copy the reference file**
 
 ```bash
 cp "ASSET INVESTOR PROMPT.md" prompts/investor-interview-prompt.md
 ```
 
-- [ ] **Step 2: Apply these exact edits**
+- [x] **Step 2: Apply these exact edits**
 
 **(a)** Insert at the very top, BEFORE `# System Prompt — Investor Strategy Architect`:
 
@@ -845,11 +845,11 @@ and in the `## Personal Nuances` block of the template, replace the description 
 [Bulleted list. Tax (regime, LTCG/STCG treatment, SGB/EPF/PPF specifics), income & liquidity in ₹, time budget, family constraints, behavioural blind spots, routines, public-exposure rules. The constraints that make this strategy *theirs* and not transferable to anyone else. All amounts in ₹ (lakh/crore).]
 ```
 
-- [ ] **Step 3: Verify by live test**
+- [x] **Step 3: Verify by live test**
 
 Paste the full file into a fresh Claude chat (claude.ai). Expected: it responds ONLY with the opening line ("Let's build your investor one-pager. Start by telling me where you live…") and waits — no document dump, no multiple questions. If it dumps the document or asks 3+ questions at once, the edits broke the structure; diff against the reference and fix.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add prompts/investor-interview-prompt.md
@@ -867,13 +867,13 @@ git commit -m "feat(prompts): India-adapted chat interview prompt for investor o
 - Consumes: `cowork-investor-os-system-prompt.md` (repo root, reference — do not modify it).
 - Produces: the prompt Hemant uses with Paresh in Claude Cowork/Code in Phase 2.
 
-- [ ] **Step 1: Copy the reference file**
+- [x] **Step 1: Copy the reference file**
 
 ```bash
 cp cowork-investor-os-system-prompt.md prompts/investor-os-builder-prompt.md
 ```
 
-- [ ] **Step 2: Apply these exact edits**
+- [x] **Step 2: Apply these exact edits**
 
 **(a)** Insert at the very top, BEFORE the first heading:
 
@@ -910,11 +910,11 @@ with:
 Rolling 6-month view. All figures in ₹ (lakh/crore where natural). Updated monthly after month-end close.
 ```
 
-- [ ] **Step 3: Verify**
+- [x] **Step 3: Verify**
 
 Read the diff vs the reference (`git diff --no-index cowork-investor-os-system-prompt.md prompts/investor-os-builder-prompt.md`): only the four edits above appear; the file templates, rules, and final instructions are otherwise byte-identical.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add prompts/investor-os-builder-prompt.md
@@ -931,7 +931,7 @@ git commit -m "feat(prompts): India-adapted Investor OS builder prompt for Cowor
 **Interfaces:**
 - Consumes: everything built in Tasks 1–10 (file names must match exactly).
 
-- [ ] **Step 1: Create README.md with exactly this content**
+- [x] **Step 1: Create README.md with exactly this content**
 
 ```markdown
 # Investor OS — Demo Package for Paresh Karya
@@ -987,11 +987,11 @@ data.
   `AI-Advisor-Build-Guide.pdf`).
 ```
 
-- [ ] **Step 2: Verify**
+- [x] **Step 2: Verify**
 
 Every path named in the README exists (`demo/investor-os-dashboard.html`, three files under `prompts/`, both docs folders).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add README.md
@@ -1005,24 +1005,24 @@ git commit -m "docs: README with demo script and phased roadmap"
 **Files:**
 - Modify: `demo/investor-os-dashboard.html` (only if fixes needed)
 
-- [ ] **Step 1: No-network check**
+- [x] **Step 1: No-network check**
 
 Run: `grep -Eo "https?://[^\"' ]+" demo/investor-os-dashboard.html`
 Expected: **no output** (zero external URLs in the HTML). Also confirm no `<link>`, `<img src=`, `@import`, or `fetch(` in the file: `grep -En "<link|<img|@import|fetch\(" demo/investor-os-dashboard.html` → no output.
 
-- [ ] **Step 2: Self-test + full manual walkthrough**
+- [x] **Step 2: Self-test + full manual walkthrough**
 
 Open `demo/investor-os-dashboard.html#selftest` → banner **6/6 passed**. Then walk all 5 views per the README demo script; press F12 → Console shows no errors; Network tab shows zero requests besides the file itself.
 
-- [ ] **Step 3: Responsive sanity**
+- [x] **Step 3: Responsive sanity**
 
 Narrow the window below ~860px: sidebar collapses to a horizontal strip, two-column grids stack, holdings table scrolls horizontally inside its panel (page itself must not scroll horizontally).
 
-- [ ] **Step 4: Consistency sweep**
+- [x] **Step 4: Consistency sweep**
 
 The same facts appear identically in all views: total ₹2.41 Cr · gold 16.9% vs 10–14% band · cash ₹24.6L / 10.2% vs 8% floor · TCS −4.2% day / −6.4% vs cost · Rule 2 wording. Fix any drift.
 
-- [ ] **Step 5: Commit any fixes and tag done**
+- [x] **Step 5: Commit any fixes and tag done**
 
 ```bash
 git add -A

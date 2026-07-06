@@ -1,4 +1,4 @@
-# Investor OS — Demo Package for Paresh Karya
+# Investor OS — Demo Package for Paresh Karia
 
 An AI-powered personal investment system, modelled on the "AI Financial
 Advisor" architecture (AI Edge, https://youtu.be/VvuHr46wF-4). This repo is

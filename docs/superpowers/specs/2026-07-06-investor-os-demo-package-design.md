@@ -1,4 +1,4 @@
-# Design — Investor OS Demo Package for Paresh Karya
+# Design — Investor OS Demo Package for Paresh Karia
 
 **Date:** 2026-07-06
 **Author:** Hemant (with Claude)
@@ -8,7 +8,7 @@
 
 ## 1. Background & Purpose
 
-Paresh Karya (CEO, Acquest Advisors) wants a personal AI-powered investment
+Paresh Karia (CEO, Acquest Advisors) wants a personal AI-powered investment
 system modelled on the "AI Financial Advisor" build from the AI Edge YouTube
 video (https://youtu.be/VvuHr46wF-4). The reference architecture (from the
 video, the two system-prompt MD files, and `AI-Advisor-Build-Guide.pdf` in
@@ -55,7 +55,7 @@ Investment_portfolio_dashboard/
 
 ### Look & feel
 Dark premium private-banking aesthetic: deep charcoal/navy base, gold +
-emerald accents, refined typography. Header: "Paresh Karya — Investor OS"
+emerald accents, refined typography. Header: "Paresh Karia — Investor OS"
 with current date and DEMO badge. Not a generic admin-template look.
 (Implementation will use the frontend-design skill and dataviz skill for
 chart styling.)

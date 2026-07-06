@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build the pitch/demo package for Paresh Karya: one self-contained interactive HTML dashboard mockup (fictional Indian portfolio, ₹), three prompt MD files, and a README with demo script — per the approved spec at `docs/superpowers/specs/2026-07-06-investor-os-demo-package-design.md`.
+**Goal:** Build the pitch/demo package for Paresh Karia: one self-contained interactive HTML dashboard mockup (fictional Indian portfolio, ₹), three prompt MD files, and a README with demo script — per the approved spec at `docs/superpowers/specs/2026-07-06-investor-os-demo-package-design.md`.
 
 **Architecture:** The dashboard is ONE static HTML file with all CSS/JS/data inline — no libraries, no network requests. A single `PORTFOLIO` data object drives every number on screen (JS computes totals/percentages so nothing is inconsistent). Charts are hand-built inline SVG. The prompt files are adaptations of the two reference MDs already in the repo root.
 
@@ -63,7 +63,7 @@ Narrative facts reused across views (keep consistent): TCS −6.4% vs cost (Q1 m
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paresh Karya — Investor OS (Demo)</title>
+<title>Paresh Karia — Investor OS (Demo)</title>
 <style>
 :root{
   --bg:#0c1017; --panel:#131a26; --panel-2:#1a2333; --line:#243044;
@@ -97,7 +97,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 <div class="app">
   <aside class="sidebar">
     <div class="brand">INVESTOR OS</div>
-    <div class="brand-sub">Private · Paresh Karya</div>
+    <div class="brand-sub">Private · Paresh Karia</div>
     <button class="nav-btn active" data-view="view-overview">◈ Overview</button>
     <button class="nav-btn" data-view="view-holdings">▤ Holdings</button>
     <button class="nav-btn" data-view="view-brief">⚡ Morning Brief</button>
@@ -106,7 +106,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
   </aside>
   <main class="main">
     <div class="topbar">
-      <h1>Paresh Karya — Investor OS</h1>
+      <h1>Paresh Karia — Investor OS</h1>
       <span class="date">Monday, 6 July 2026 · 7:00 AM IST</span>
       <span class="badge-demo">DEMO — SAMPLE DATA</span>
     </div>
@@ -934,7 +934,7 @@ git commit -m "feat(prompts): India-adapted Investor OS builder prompt for Cowor
 - [x] **Step 1: Create README.md with exactly this content**
 
 ```markdown
-# Investor OS — Demo Package for Paresh Karya
+# Investor OS — Demo Package for Paresh Karia
 
 An AI-powered personal investment system, modelled on the "AI Financial
 Advisor" architecture (AI Edge, https://youtu.be/VvuHr46wF-4). This repo is

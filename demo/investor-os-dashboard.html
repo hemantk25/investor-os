@@ -39,8 +39,33 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}
 }
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+.card .lbl{font-size:11.5px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:8px}
+.card .num{font-family:var(--serif);font-size:25px;font-weight:600;font-variant-numeric:tabular-nums lining-nums}
+.card .sub{font-size:12.5px;margin-top:4px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:18px}
+.panel h2{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:14px}
+.panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px}
+.panel-head h2{margin-bottom:0}
+.range-tabs button{background:none;border:1px solid var(--line);color:var(--muted);border-radius:8px;
+  padding:4px 12px;margin-left:6px;font-size:12px;cursor:pointer;font-family:var(--font)}
+.range-tabs button.active{border-color:var(--gold);color:var(--gold)}
+.chart-wrap{position:relative}
+.chart-wrap svg{width:100%;height:240px;display:block}
+.chart-tip{position:absolute;pointer-events:none;background:var(--panel-2);border:1px solid var(--line);
+  border-radius:8px;padding:6px 10px;font-size:12px;white-space:nowrap;transform:translate(-50%,-115%);z-index:5}
+.chart-tip b{font-variant-numeric:tabular-nums}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.donut-wrap{display:flex;gap:22px;align-items:center;flex-wrap:wrap}
+.legend-row{display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:7px}
+.legend-dot{width:10px;height:10px;border-radius:3px;flex:none}
+.mover{display:flex;justify-content:space-between;padding:9px 2px;border-bottom:1px solid var(--line);font-size:13.5px}
+.mover:last-child{border-bottom:none}
+.mover .mv{font-variant-numeric:tabular-nums}
 @media (max-width:860px){
   .app{grid-template-columns:1fr}
+  .two-col{grid-template-columns:1fr}
   .sidebar{position:static;height:auto;display:flex;overflow-x:auto;padding:10px;gap:4px}
   .sidebar .nav-btn{white-space:nowrap;margin-bottom:0}
   .brand,.brand-sub{display:none}
@@ -66,7 +91,29 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
       <span class="date">Monday, 6 July 2026 · 7:00 AM IST</span>
       <span class="badge-demo">DEMO — SAMPLE DATA</span>
     </div>
-    <section id="view-overview" class="view active"></section>
+    <section id="view-overview" class="view active">
+      <div class="cards" id="hero-cards"></div>
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Portfolio Value</h2>
+          <div class="range-tabs" id="range-tabs">
+            <button data-r="1M">1M</button><button data-r="3M">3M</button>
+            <button data-r="6M" class="active">6M</button><button data-r="1Y">1Y</button>
+            <button data-r="ALL">ALL</button>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <svg id="area-chart" viewBox="0 0 720 240" preserveAspectRatio="none"></svg>
+          <div id="chart-tip" class="chart-tip" hidden></div>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="panel"><h2>Asset Allocation</h2><div class="donut-wrap">
+          <svg id="donut" viewBox="0 0 160 160" style="width:160px;height:160px"></svg>
+          <div id="donut-legend"></div></div></div>
+        <div class="panel"><h2>Top Movers Today</h2><div id="movers"></div></div>
+      </div>
+    </section>
     <section id="view-holdings" class="view"></section>
     <section id="view-brief" class="view"></section>
     <section id="view-alerts" class="view"></section>
@@ -156,6 +203,107 @@ function switchView(id){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===id));
 }
 document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>switchView(b.dataset.view)));
+</script>
+<script>
+(function(){
+  const t = computeTotals();
+  document.getElementById('hero-cards').innerHTML = `
+    <div class="card"><div class="lbl">Total Value</div><div class="num">${inrShort(t.totalValue)}</div>
+      <div class="sub muted">${inr(t.totalValue)}</div></div>
+    <div class="card"><div class="lbl">Unrealised P/L</div>
+      <div class="num up">${inrShort(t.unrealPL)}</div><div class="sub up">${pct(t.unrealPLPct)} on invested</div></div>
+    <div class="card"><div class="lbl">Today</div>
+      <div class="num ${t.dayPL>=0?'up':'down'}">${inrShort(t.dayPL)}</div>
+      <div class="sub ${t.dayPL>=0?'up':'down'}">${pct(t.dayPLPct)}</div></div>
+    <div class="card"><div class="lbl">Cash Available</div><div class="num">${inrShort(t.cash)}</div>
+      <div class="sub muted">${(t.cash/t.totalValue*100).toFixed(1)}% of portfolio · floor 8%</div></div>`;
+
+  // Trading-day labels counting back from the last close (Fri 3 Jul 2026)
+  function tradingDates(n){
+    const out = [], d = new Date(2026, 6, 3);
+    for(let i=0;i<n;i++){
+      out.unshift(d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'2-digit'}));
+      do { d.setDate(d.getDate()-1); } while(d.getDay()===0 || d.getDay()===6);
+    }
+    return out;
+  }
+
+  const W=720, H=240, P=10;
+  let cur = {key:'6M', s:[], min:0, max:0, dates:[]};
+  window.renderAreaChart = function(key){
+    const s = SERIES[key];
+    const min = Math.min(...s)*0.998, max = Math.max(...s)*1.002;
+    cur = {key, s, min, max, dates: tradingDates(s.length)};
+    const x = i => P + i*(W-2*P)/(s.length-1);
+    const y = v => H-P - (v-min)*(H-2*P)/(max-min);
+    const pts = s.map((v,i)=>`${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+    const grid = [0.25,0.5,0.75].map(f=>{
+      const gy = (P + f*(H-2*P)).toFixed(1);
+      return `<line x1="${P}" y1="${gy}" x2="${W-P}" y2="${gy}" stroke="#232e42" stroke-width="1"/>`;
+    }).join('');
+    document.getElementById('area-chart').innerHTML = `
+      <defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#d4b06e" stop-opacity="0.32"/>
+        <stop offset="1" stop-color="#d4b06e" stop-opacity="0"/></linearGradient></defs>
+      ${grid}
+      <polygon points="${x(0)},${H-P} ${pts} ${x(s.length-1)},${H-P}" fill="url(#ag)"/>
+      <polyline points="${pts}" fill="none" stroke="#d4b06e" stroke-width="2"/>
+      <line id="xhair" x1="0" y1="${P}" x2="0" y2="${H-P}" stroke="#8c99ae" stroke-width="1" stroke-dasharray="3 3" visibility="hidden"/>
+      <circle id="xdot" r="4" fill="#d4b06e" stroke="#121826" stroke-width="2" visibility="hidden"/>`;
+    document.querySelectorAll('#range-tabs button').forEach(b=>b.classList.toggle('active',b.dataset.r===key));
+  };
+  const wrap = document.querySelector('.chart-wrap');
+  const tip = document.getElementById('chart-tip');
+  wrap.addEventListener('mousemove', e=>{
+    const r = wrap.getBoundingClientRect();
+    const fx = (e.clientX - r.left)/r.width;
+    const i = Math.max(0, Math.min(cur.s.length-1, Math.round(fx*(cur.s.length-1))));
+    const v = cur.s[i];
+    const svgX = P + i*(W-2*P)/(cur.s.length-1);
+    const svgY = H-P - (v-cur.min)*(H-2*P)/(cur.max-cur.min);
+    const xh = document.getElementById('xhair'), xd = document.getElementById('xdot');
+    xh.setAttribute('x1',svgX); xh.setAttribute('x2',svgX); xh.removeAttribute('visibility');
+    xd.setAttribute('cx',svgX); xd.setAttribute('cy',svgY); xd.removeAttribute('visibility');
+    tip.hidden = false;
+    tip.style.left = (svgX/W*100)+'%';
+    tip.style.top  = (svgY/H*100)+'%';
+    tip.innerHTML = `${cur.dates[i]} · <b>${inrShort(v)}</b>`;
+  });
+  wrap.addEventListener('mouseleave', ()=>{
+    tip.hidden = true;
+    const xh = document.getElementById('xhair'), xd = document.getElementById('xdot');
+    if(xh) xh.setAttribute('visibility','hidden');
+    if(xd) xd.setAttribute('visibility','hidden');
+  });
+  document.querySelectorAll('#range-tabs button').forEach(b=>b.addEventListener('click',()=>renderAreaChart(b.dataset.r)));
+  renderAreaChart('6M');
+
+  // Categorical palette: dataviz-validated order incl. wrap (equity↔cash)
+  const CLS = [['equity','Direct Equity','#3987e5'],['mf','Mutual Funds','#199e70'],
+               ['gold','Gold (SGB)','#c98500'],['debt','Debt & FD','#9085e9'],['cash','Cash','#008300']];
+  window.renderDonut = function(){
+    const R=58, C=2*Math.PI*R, GAP=2.5; let off=0, seg='', leg='';
+    for(const [k,label,color] of CLS){
+      const frac = t.byClass[k]/t.totalValue;
+      const len = Math.max(0, frac*C - GAP);
+      seg += `<circle r="${R}" cx="80" cy="80" fill="none" stroke="${color}" stroke-width="20"
+        stroke-dasharray="${len.toFixed(1)} ${(C-len).toFixed(1)}" stroke-dashoffset="${(-(off*C+GAP/2)).toFixed(1)}"
+        transform="rotate(-90 80 80)"/>`;
+      leg += `<div class="legend-row"><span class="legend-dot" style="background:${color}"></span>
+        ${label} — ${(frac*100).toFixed(1)}% <span class="muted">· ${inrShort(t.byClass[k])}</span></div>`;
+      off += frac;
+    }
+    document.getElementById('donut').innerHTML = seg;
+    document.getElementById('donut-legend').innerHTML = leg;
+  };
+  renderDonut();
+
+  const movers = PORTFOLIO.holdings.filter(h=>h.cls==='equity').sort((a,b)=>b.day-a.day);
+  const pick = [...movers.slice(0,2), ...movers.slice(-2)];
+  document.getElementById('movers').innerHTML = pick.map(h=>
+    `<div class="mover"><span>${h.name}</span>
+     <span class="mv ${h.day>=0?'up':'down'}">${pct(h.day)} · ${inrShort(val(h))}</span></div>`).join('');
+})();
 </script>
 </body>
 </html>

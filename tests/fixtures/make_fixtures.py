@@ -54,6 +54,7 @@ def advisory():
     ws.append(["", "Stock", "Sector", "Category", "Cur. Value", "G/L Est.", "Priority", "Est. Proceeds", "Reason for Exit"])
     ws.append(["", "Beta Pharma", "Pharma", "ZOMBIE", "₹0.2L", "-50%", "IMMEDIATE", "~₹20K", "Fixture reason"])
     ws.append(["", "Omega Ghost", "Misc", "ZOMBIE", "₹100", "-99%", "IMMEDIATE", "~₹100", "No match in holdings"])
+    ws.append(["", "ESTIMATED TOTAL PROCEEDS — 2 EXITS", "", "", "", "", "", "~₹20K", ""])
     ws = wb.create_sheet("New Buys (10 Stocks)")
     ws.append([])
     ws.append(["", "NEW BUYS (fixture)"])

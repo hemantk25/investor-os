@@ -97,7 +97,42 @@ def view_overview():
 
 
 def view_holdings():
-    st.info("Holdings — coming in Task 9")
+    pf = load_portfolio()
+    if pf is None:
+        onboarding_card()
+        return
+    member = member_selector(pf.members)
+    q = st.text_input("Search", placeholder="Filter by name or symbol…")
+    cons = pf.consolidated(member)
+    if q:
+        ql = q.lower()
+        cons = [c for c in cons if ql in c.name.lower() or ql in (c.nse_symbol or "").lower()]
+    rows = []
+    for c in cons:
+        rows.append({
+            "Stock": c.name.title(),
+            "NSE": c.nse_symbol or "—",
+            "Qty": c.qty,
+            "Avg Cost": round(c.avg_cost, 2) if c.avg_cost else None,
+            "Price": round(c.price, 2),
+            "Value": round(c.value),
+            "P/L %": round(c.pl_pct, 1) if c.pl_pct is not None else None,
+            "Day %": round(c.day_pct, 2) if c.day_pct is not None else None,
+            "Held By": " + ".join(c.held_by),
+            "Flags": (("⚠cost " if (c.avg_cost is None or c.cost_partial) else "")
+                      + ("" if c.price_live else "stale")).strip(),
+        })
+    st.dataframe(rows, hide_index=True, width="stretch",
+                 column_config={"P/L %": st.column_config.NumberColumn(format="%.1f%%"),
+                                "Day %": st.column_config.NumberColumn(format="%.2f%%")})
+    st.caption(f"{len(rows)} positions · ⚠cost = buy price missing in ICICI export · "
+               "stale = price from your Excel, not live")
+    if pf.extras:
+        st.subheader("Other assets (from extras.json)")
+        st.dataframe([{"Member": e.member, "Asset": e.label, "Class": e.asset_class,
+                       "Value": round(e.value)} for e in pf.extras
+                      if member is None or e.member == member],
+                     hide_index=True, width="stretch")
 
 
 def view_rebalance():

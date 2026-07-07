@@ -41,11 +41,36 @@ data-consistency checks pass.
 - **Phase 2:** run the real interview with Sir (chat prompt), then build his
   memory folder in Cowork (`investor-os-builder-prompt.md`). Output:
   his real one-pager + instructions.md + memory.md + financials/.
-- **Phase 3:** working dashboard — Streamlit + Python per
-  `AI-Advisor-Build-Guide.pdf`: live NSE prices via yfinance (`.NS`
-  tickers), Anthropic API for briefs/chat, SQLite memory.
+- **Phase 3 (in progress, `phase3-dashboard` branch):** the real local-first
+  dashboard — Streamlit + yfinance, ICICI Excel ingestion, member switcher,
+  rebalance tracker, morning briefs via Claude Code. See
+  "Running the real dashboard" below.
 - **Phase 4:** Telegram bot (BotFather), scheduled 7 AM morning brief,
   price/news alerts, weekly newsletter.
+
+## Running the real dashboard (Phase 3)
+
+The real dashboard lives in `app/` and runs locally — no server, no API keys,
+no cost beyond the owner's existing Claude subscription. Real financial data
+stays on the machine (the `data/`, `briefs/`, `profile/` folders are
+gitignored and never leave it).
+
+**One-time setup**
+
+- macOS: `bash setup.sh` (or just double-click **Start Dashboard.command** —
+  it self-installs on first run).
+- Windows (dev): `./setup.ps1`.
+
+**Each use**
+
+1. Drop the weekly ICICI Direct holdings export into `data/holdings.xlsx`
+   (and the advisory report into `data/advisory.xlsx`).
+2. macOS: double-click **Start Dashboard.command**. Windows: `./start-dashboard.ps1`.
+3. The browser opens at http://localhost:8501.
+
+The one-page owner guide is `README-SIR.md`; the maintenance playbook for
+Claude Code is `CLAUDE.md`. Design and build detail:
+`docs/superpowers/specs/2026-07-07-*` and `docs/superpowers/plans/2026-07-07-*`.
 
 ## Notes
 

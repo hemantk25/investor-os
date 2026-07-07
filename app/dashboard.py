@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import streamlit as st
@@ -6,7 +7,8 @@ from app import mapping, parser, prices, theme
 from app import portfolio as pmod
 
 BASE = Path(__file__).resolve().parent.parent
-DATA = BASE / "data"
+# Data folder is overridable so tests never touch the real instance data.
+DATA = Path(os.environ.get("INVESTOR_OS_DATA", str(BASE / "data")))
 HOLDINGS = DATA / "holdings.xlsx"
 
 st.set_page_config(page_title="Investor OS — Paresh Karia", page_icon="◈", layout="wide")
@@ -58,15 +60,20 @@ def view_overview():
     t = pf.totals(member)
     cons = pf.consolidated(member)
     live = sum(1 for c in cons if c.price_live)
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Total Value", pmod.fmt_short(t.total_value), pmod.fmt_inr(t.total_value),
-              delta_color="off")
-    c2.metric("Unrealised P/L", pmod.fmt_short(t.pl),
-              (pmod.fmt_pct(t.pl_pct) + " on known cost") if t.pl_pct is not None else "—")
-    c3.metric("Day P/L", pmod.fmt_short(t.day_pl), pmod.fmt_pct(t.day_pl_pct))
-    c4.metric("Equity / Extras", pmod.fmt_short(t.equity_value),
-              " · ".join(f"{k} {pmod.fmt_short(v)}" for k, v in t.extras_by_class.items())
-              or "no extras", delta_color="off")
+    extras_sub = " · ".join(f"{k} {pmod.fmt_short(v)}" for k, v in t.extras_by_class.items())
+    cards = [
+        ("Total Value", pmod.fmt_short(t.total_value), pmod.fmt_inr(t.total_value), "muted"),
+        ("Unrealised P/L", pmod.fmt_short(t.pl),
+         (pmod.fmt_pct(t.pl_pct) + " on known cost") if t.pl_pct is not None else "—",
+         "up" if t.pl >= 0 else "down"),
+        ("Day P/L", pmod.fmt_short(t.day_pl), pmod.fmt_pct(t.day_pl_pct),
+         "up" if t.day_pl >= 0 else "down"),
+        ("Equity / Extras", pmod.fmt_short(t.equity_value), extras_sub or "no extras", "muted"),
+    ]
+    st.markdown('<div class="hero">' + "".join(
+        f'<div class="mcard"><div class="mlbl">{lbl}</div>'
+        f'<div class="mnum">{val}</div><div class="msub {cls}">{sub}</div></div>'
+        for lbl, val, sub, cls in cards) + '</div>', unsafe_allow_html=True)
     st.caption(f"Holdings file: {pf.asof:%d %b %Y %H:%M} · live prices {live}/{len(cons)} · "
                f"{'member ' + member if member else 'all members'}")
     left, right = st.columns(2)
@@ -76,19 +83,24 @@ def view_overview():
                [{"Bucket": k.upper(), "Value (₹)": round(v)} for k, v in t.extras_by_class.items()]
         st.dataframe(rows, hide_index=True, width="stretch")
         st.subheader("Largest positions")
-        for c in cons[:5]:
-            st.markdown(f"**{c.name.title()}** — {pmod.fmt_short(c.value)}"
-                        + ("" if c.price_live else " <span class='stale-badge'>stale</span>"),
-                        unsafe_allow_html=True)
+        rows_html = "".join(
+            f"<div class='row'><b>{c.name.title()}</b> — {pmod.fmt_short(c.value)}"
+            + ("" if c.price_live else " <span class='stale-badge'>stale</span>") + "</div>"
+            for c in cons[:5])
+        st.markdown(rows_html or "<div class='row muted'>No positions.</div>",
+                    unsafe_allow_html=True)
     with right:
         st.subheader("Top movers today")
         movers = pf.movers(member)
         if not movers:
-            st.caption("No live day-change data yet.")
-        for c in movers:
-            cls = "up" if (c.day_pct or 0) >= 0 else "down"
-            st.markdown(f"{c.name.title()} — <span class='{cls}'>{pmod.fmt_pct(c.day_pct)}</span>"
-                        f" · {pmod.fmt_short(c.value)}", unsafe_allow_html=True)
+            st.markdown("<div class='row muted'>No live day-change data yet.</div>",
+                        unsafe_allow_html=True)
+        else:
+            st.markdown("".join(
+                f"<div class='row'>{c.name.title()} — "
+                f"<span class='{'up' if (c.day_pct or 0) >= 0 else 'down'}'>"
+                f"{pmod.fmt_pct(c.day_pct)}</span> · {pmod.fmt_short(c.value)}</div>"
+                for c in movers), unsafe_allow_html=True)
     if pf.skipped:
         with st.expander(f"⚠ {len(pf.skipped)} rows skipped while reading the Excel "
                          "(incomplete data in the file)"):

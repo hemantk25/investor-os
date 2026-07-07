@@ -1,0 +1,12 @@
+# Real portfolio data — NEVER commit (repo is public)
+report_data/
+*.xlsx
+*.xls
+*.csv
+
+# Local working files
+.firecrawl/
+.venv/
+__pycache__/
+.env
+memory.db

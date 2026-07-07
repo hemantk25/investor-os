@@ -182,11 +182,49 @@ def view_rebalance():
 
 
 def view_brief():
-    st.info("Morning Brief — coming in Task 11")
+    from app import brief as bmod
+
+    pf = load_portfolio()
+    if pf is None:
+        onboarding_card()
+        return
+    briefs_dir = BASE / "briefs"
+    files = sorted(briefs_dir.glob("*.md"), reverse=True) if briefs_dir.exists() else []
+    col1, col2 = st.columns([3, 1])
+    with col2:
+        if st.button("⚡ Generate Morning Brief", type="primary", width="stretch"):
+            try:
+                with st.spinner("Claude is reading your portfolio and overnight markets… (1–3 min)"):
+                    path = bmod.generate_brief(pf, BASE)
+                st.success(f"Saved {path.name}")
+                st.rerun()
+            except bmod.BriefError as e:
+                st.error(e.message)
+        if not bmod.find_claude():
+            st.warning("Claude CLI not detected — the button will explain the fix.")
+    with col1:
+        if not files:
+            st.markdown("### ⚡ No briefs yet")
+            st.markdown("Click **Generate Morning Brief** — Claude reads your one-pager, your "
+                        "live portfolio and overnight news, and writes the brief here.")
+        else:
+            pick = st.selectbox("Brief date", [f.stem for f in files])
+            st.markdown((briefs_dir / f"{pick}.md").read_text(encoding="utf-8"))
 
 
 def view_profile():
-    st.info("Profile — coming in Task 12")
+    p = BASE / "profile" / "one-pager.md"
+    if p.exists():
+        st.markdown(p.read_text(encoding="utf-8"))
+        st.caption(f"Source: {p} — edit the file in any editor; every brief obeys it.")
+    else:
+        st.markdown("### 👤 No investor one-pager yet")
+        st.markdown(
+            "This file makes every brief and suggestion *yours*.\n\n"
+            "1. Open a new chat in Claude and paste the interview prompt "
+            "(`prompts/investor-interview-prompt.md` in the repo, or ask Hemant).\n"
+            "2. Answer ~20–30 min of questions (voice input is fastest).\n"
+            f"3. Save the result as `{p}` and reload this page.")
 
 
 VIEWS = {"◈ Overview": view_overview, "▤ Holdings": view_holdings,

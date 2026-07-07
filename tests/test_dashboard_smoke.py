@@ -44,3 +44,12 @@ def test_rebalance_view_renders():
     assert not at.exception, at.exception
     assert len(at.tabs) == 4
     assert len(at.dataframe) >= 2      # exits table + target table
+
+
+def test_brief_and_profile_views_render():
+    _prepare_data()
+    at = AppTest.from_file(str(ROOT / "app" / "dashboard.py"), default_timeout=60).run()
+    at.sidebar.radio[0].set_value("⚡ Morning Brief").run()
+    assert not at.exception, at.exception
+    at.sidebar.radio[0].set_value("👤 Investor Profile").run()
+    assert not at.exception, at.exception

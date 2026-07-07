@@ -79,7 +79,9 @@ investor-os/                     # instance folder on Sir's Mac
 │   ├── advisory.xlsx            # the 50-stock advisory report
 │   ├── extras.json              # manual MF/gold/FD/cash lines (member-tagged)
 │   ├── isin-map.csv             # cached NSE ISIN↔ticker map (auto-built)
-│   └── overrides.csv            # manual ISIN→ticker fixes (rarely needed)
+│   ├── overrides.csv            # manual ISIN→ticker fixes (rarely needed)
+│   ├── advisory-baseline.json   # auto-created on first advisory parse (§4.5)
+│   └── rebalance-status.json    # optional manual status overrides (§4.5)
 ├── briefs/                      # YYYY-MM-DD.md, newest shown in dashboard
 ├── profile/
 │   └── one-pager.md             # Sir's investor one-pager (when he does it)

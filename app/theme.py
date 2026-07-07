@@ -11,7 +11,10 @@ CSS = """
 /* ---- hide Streamlit chrome so it reads as a product, not a dev tool ---- */
 [data-testid="stToolbar"], [data-testid="stDecoration"],
 [data-testid="stStatusWidget"], #MainMenu, footer { display: none !important; }
-[data-testid="stHeader"] { background: transparent; height: 0; }
+[data-testid="stHeader"] { background: transparent; }
+/* keep the reopen-sidebar control reachable after the sidebar is collapsed */
+[data-testid="stSidebarCollapsedControl"], [data-testid="stExpandSidebarButton"] {
+  display: flex !important; z-index: 1000; }
 
 /* ---- surfaces ---- */
 .stApp, [data-testid="stAppViewContainer"] { background: var(--bg); }

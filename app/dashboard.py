@@ -136,7 +136,49 @@ def view_holdings():
 
 
 def view_rebalance():
-    st.info("Rebalance — coming in Task 10")
+    from datetime import date as _date
+
+    from app import advisory as amod
+
+    pf = load_portfolio()
+    if pf is None:
+        onboarding_card()
+        return
+    advp = DATA / "advisory.xlsx"
+    if not advp.exists():
+        st.markdown("### ⚖ No advisory report found")
+        st.markdown(f"Save the *Portfolio Advisory Report* Excel as `{advp}` and reload.")
+        return
+    adv = amod.apply_status(amod.parse_advisory(advp), pf, DATA, _date.today())
+    done = sum(1 for e in adv.exits if e.status == "DONE")
+    st.caption(f"Exits: {done}/{len(adv.exits)} done · New buys: {len(adv.buys)} · "
+               "auto-detected from your latest holdings; override via data/rebalance-status.json")
+    tab_e, tab_b, tab_s, tab_t = st.tabs(["Exits", "New Buys", "Schedule", "Target Portfolio"])
+    with tab_e:
+        badge = {"DONE": "✅", "IN PROGRESS": "🔄", "PENDING": "⏳", "REVIEW": "❓"}
+        st.dataframe([{"": badge.get(e.status, ""), "Stock": e.stock, "Status": e.status,
+                       "Src": e.source, "Priority": e.priority, "Category": e.category,
+                       "Est. Proceeds": e.proceeds, "Reason": e.reason} for e in adv.exits],
+                     hide_index=True, width="stretch")
+        st.caption("❓ REVIEW = couldn't match this name to a holding — set it manually in "
+                   "rebalance-status.json")
+    with tab_b:
+        for b in adv.buys:
+            st.markdown(f"**{b.stock}** ({b.sector}) — target {pmod.fmt_short(b.alloc_lo)}–"
+                        f"{pmod.fmt_short(b.alloc_hi)} · deployed {pmod.fmt_short(b.current_value)}")
+            st.progress(min(1.0, b.progress_pct / 100))
+    with tab_s:
+        for m in adv.schedule:
+            st.markdown(f"**{m.label}**" + (" ← you are here" if m.is_current else ""))
+            if m.exits_text:
+                st.markdown(f"- Exits: {m.exits_text}")
+            if m.buys_text:
+                st.markdown(f"- Buys: {m.buys_text}")
+    with tab_t:
+        st.dataframe([{"#": t.num, "Stock": t.stock, "Sector": t.sector, "Status": t.status,
+                       "Target %": t.target_pct, "CAGR": t.cagr, "Conviction": t.conviction,
+                       "Thesis": t.thesis} for t in adv.targets],
+                     hide_index=True, width="stretch")
 
 
 def view_brief():

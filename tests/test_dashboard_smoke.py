@@ -33,3 +33,14 @@ def test_holdings_view_renders():
     df = at.dataframe[0].value
     assert "Held By" in df.columns
     assert (df["Flags"].str.contains("cost").any())   # BETA row flagged
+
+
+def test_rebalance_view_renders():
+    _prepare_data()
+    shutil.copy(Path(__file__).parent / "fixtures" / "sample-advisory.xlsx",
+                ROOT / "data" / "advisory.xlsx")
+    at = AppTest.from_file(str(ROOT / "app" / "dashboard.py"), default_timeout=60).run()
+    at.sidebar.radio[0].set_value("⚖ Rebalance").run()
+    assert not at.exception, at.exception
+    assert len(at.tabs) == 4
+    assert len(at.dataframe) >= 2      # exits table + target table

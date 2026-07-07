@@ -10,3 +10,9 @@ report_data/
 __pycache__/
 .env
 memory.db
+
+# Instance data (real financials live here locally — never commit)
+/data/
+/briefs/
+/profile/
+!tests/fixtures/*.xlsx

@@ -103,3 +103,17 @@ def rebalance(pf, adv, tab: str) -> dict:
     selected = tab if tab in ("exits", "buys", "schedule") else "exits"
     return {"tab": selected, "exits": exits, "buys": buys, "sched": sched,
             "summary": f"{done}/{len(adv.exits)} exits done"}
+
+
+def brief_ctx(base_dir, pf, pick: str | None) -> dict:
+    import markdown as md
+    briefs_dir = base_dir / "briefs"
+    files = sorted(briefs_dir.glob("*.md"), reverse=True) if briefs_dir.exists() else []
+    dates = [f.stem for f in files]
+    chosen = pick if pick in dates else (dates[0] if dates else None)
+    html = ""
+    if chosen:
+        html = md.markdown((briefs_dir / f"{chosen}.md").read_text(encoding="utf-8"),
+                           extensions=["extra"])
+    return {"dates": dates, "chosen": chosen, "brief_html": html,
+            "has_brief": bool(chosen)}

@@ -1,7 +1,7 @@
 from __future__ import annotations
 import os
 from pathlib import Path
-from flask import Flask, render_template, request
+from flask import Flask, redirect, render_template, request, url_for
 
 from app import parser, mapping, prices, advisory
 from app import portfolio as pmod
@@ -91,8 +91,30 @@ def create_app() -> Flask:
 
     @app.route("/brief")
     def brief():
-        return render_template("base.html", active="brief", page="Morning Brief",
-                               members=[], member=None, freshness="", body="Brief coming soon")
+        pf = load_portfolio()
+        if pf is None:
+            return render_template("brief.html", **_empty("brief", "Morning Brief"))
+        member = _member_arg()
+        ctx = vm.brief_ctx(BASE, pf, request.args.get("pick"))
+        ctx.update(vm.common(pf, "brief", member))
+        ctx["page"] = "Morning Brief"
+        ctx["empty"] = False
+        ctx["error"] = request.args.get("error", "")
+        from app import brief as bmod
+        ctx["claude_ok"] = bool(bmod.find_claude())
+        return render_template("brief.html", **ctx)
+
+    @app.route("/brief/generate", methods=["POST"])
+    def brief_generate():
+        from app import brief as bmod
+        pf = load_portfolio()
+        if pf is None:
+            return redirect(url_for("brief"))
+        try:
+            bmod.generate_brief(pf, BASE)
+            return redirect(url_for("brief"))
+        except bmod.BriefError as e:
+            return redirect(url_for("brief", error=e.message))
 
     @app.route("/profile")
     def profile():

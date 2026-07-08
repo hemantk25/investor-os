@@ -17,6 +17,7 @@ class Position:
     price: float
     price_live: bool
     day_pct: float | None
+    cls: str = "equity"
 
     @property
     def value(self):
@@ -140,7 +141,7 @@ def build_portfolio(pr, isin_map, quotes, extras):
             member=h.member, name=h.name, isin=h.isin, icici_symbol=h.icici_symbol,
             nse_symbol=sym, qty=h.qty, avg_cost=h.avg_cost, price=price,
             price_live=q is not None,
-            day_pct=q.day_pct if q else h.excel_day_pct))
+            day_pct=q.day_pct if q else h.excel_day_pct, cls="equity"))
     return Portfolio(positions, extras, pr.asof, pr.skipped, pr.members)
 
 

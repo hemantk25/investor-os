@@ -78,3 +78,28 @@ def holdings(pf, member, q: str) -> dict:
             groups.append({"key": key, "title": title, "tag": tag, "rows": rows,
                            "subtotal": pmod.fmt_short(sub)})
     return {"groups": groups, "q": q or ""}
+
+
+def rebalance(pf, adv, tab: str) -> dict:
+    badge = {"DONE": ("Done", "green"), "IN PROGRESS": ("In Progress", "amber"),
+             "PENDING": ("Pending", "grey"), "REVIEW": ("Review", "grey")}
+    exits = []
+    for e in adv.exits:
+        label, tone = badge.get(e.status, (e.status.title(), "grey"))
+        exits.append({"stock": e.stock, "label": label, "tone": tone,
+                      "priority": e.priority, "proceeds": e.proceeds,
+                      "reason": e.reason,
+                      "initials": "".join(w[0] for w in e.stock.split()[:2]).upper()})
+    buys = [{"stock": b.stock, "sector": b.sector,
+             "lo": pmod.fmt_short(b.alloc_lo), "hi": pmod.fmt_short(b.alloc_hi),
+             "deployed": pmod.fmt_short(b.current_value),
+             "pct": round(b.progress_pct),
+             "entry": b.entry, "horizon": b.horizon, "thesis": b.thesis}
+            for b in adv.buys]
+    sched = [{"label": m.label, "exits": m.exits_text,
+              "buys": m.buys_text, "here": m.is_current}
+             for m in adv.schedule]
+    done = sum(1 for e in adv.exits if e.status == "DONE")
+    selected = tab if tab in ("exits", "buys", "schedule") else "exits"
+    return {"tab": selected, "exits": exits, "buys": buys, "sched": sched,
+            "summary": f"{done}/{len(adv.exits)} exits done"}

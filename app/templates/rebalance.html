@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% block content %}
+{% if empty %}
+<div class="flex-1 flex items-center justify-center py-24">
+  <div class="flex flex-col items-center justify-center text-center bg-surface rounded-xl p-12 shadow-card border border-[#E6E9F0] max-w-lg">
+    <div class="w-16 h-16 rounded-full bg-secondary-container flex items-center justify-center mb-4 text-primary">
+      {{ icon('download') }}
+    </div>
+    <h2 class="font-h3 text-h3 text-on-surface mb-2">No holdings yet</h2>
+    <p class="font-body-md text-body-md text-on-surface-variant">Drop the ICICI export into <code class="px-1.5 py-0.5 rounded bg-surface-container-low text-primary font-medium">data/holdings.xlsx</code> before tracking rebalance progress.</p>
+  </div>
+</div>
+{% elif no_adv %}
+<div class="bg-surface rounded-xl p-8 shadow-card border border-[#E6E9F0] max-w-2xl">
+  <div class="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center mb-4 text-primary">
+    {{ icon('rebalance') }}
+  </div>
+  <h2 class="font-h3 text-h3 text-on-surface">No advisory report found</h2>
+  <p class="font-body-md text-body-md text-on-surface-variant mt-2">Save the Portfolio Advisory Report Excel as <code class="px-1.5 py-0.5 rounded bg-surface-container-low text-primary font-medium">data/advisory.xlsx</code> and refresh this page.</p>
+</div>
+{% else %}
+<section class="flex flex-col gap-stack_lg">
+  <div class="bg-surface rounded-xl p-6 shadow-card border border-[#E6E9F0] flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <h2 class="font-h3 text-h3 text-on-surface">Rebalance Strategy</h2>
+      <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">{{ summary }} · auto-detected from the latest holdings.</p>
+    </div>
+    <div class="flex bg-surface-container-low rounded-lg p-1">
+      {% for key, label in [('exits', 'Exits'), ('buys', 'New Buys'), ('schedule', 'Schedule')] %}
+      <a href="/rebalance?tab={{ key }}{% if member %}&member={{ member }}{% endif %}" class="px-4 py-2 text-sm font-medium rounded-md transition-colors {% if tab == key %}bg-white text-primary shadow-sm border border-[#E6E9F0]{% else %}text-on-surface-variant hover:text-primary{% endif %}">{{ label }}</a>
+      {% endfor %}
+    </div>
+  </div>
+
+  {% if tab == 'exits' %}
+  <div class="bg-surface rounded-xl shadow-card border border-[#E6E9F0] overflow-hidden">
+    <div class="p-6 border-b border-[#E6E9F0]">
+      <h2 class="font-h3 text-h3 text-on-surface">Identified Exits</h2>
+      <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Status updates as the latest holdings change against the baseline snapshot.</p>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full border-collapse">
+        <thead class="bg-surface-container-low text-left">
+          <tr class="font-label-caps text-label-caps text-on-surface-variant uppercase">
+            <th class="px-6 py-3 font-medium">Stock</th>
+            <th class="px-4 py-3 font-medium">Status</th>
+            <th class="px-4 py-3 font-medium">Priority</th>
+            <th class="px-4 py-3 font-medium text-right">Est. Proceeds</th>
+            <th class="px-6 py-3 font-medium">Reason</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for e in exits %}
+          <tr class="table-row-hover border-b border-[#E6E9F0]">
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-3">
+                <span class="w-9 h-9 rounded-full bg-secondary-container flex items-center justify-center text-primary text-xs font-bold">{{ e.initials }}</span>
+                <span class="font-body-sm text-body-sm font-medium text-on-surface">{{ e.stock }}</span>
+              </div>
+            </td>
+            <td class="px-4 py-4">
+              <span class="rounded-full px-3 py-1 text-xs font-medium {% if e.tone == 'green' %}bg-status-success/10 text-status-success{% elif e.tone == 'amber' %}bg-[#FEF3C7] text-[#B45309]{% else %}bg-surface-container-low text-outline{% endif %}">{{ e.label }}</span>
+            </td>
+            <td class="px-4 py-4 font-body-sm text-body-sm text-on-surface-variant">{{ e.priority }}</td>
+            <td class="px-4 py-4 text-right font-number-display text-sm text-on-surface">{{ e.proceeds }}</td>
+            <td class="px-6 py-4 font-body-sm text-body-sm text-on-surface-variant max-w-xl">{{ e.reason }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="5" class="px-6 py-8 text-center text-on-surface-variant">No exit rows found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% elif tab == 'buys' %}
+  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-gutter">
+    {% for b in buys %}
+    <article class="bg-surface rounded-xl p-6 shadow-card border border-[#E6E9F0] flex flex-col gap-4">
+      <div>
+        <p class="font-body-sm text-body-sm text-on-surface-variant">{{ b.sector }}</p>
+        <h2 class="font-h3 text-h3 text-on-surface mt-1">{{ b.stock }}</h2>
+      </div>
+      <div class="flex justify-between text-sm">
+        <span class="text-on-surface-variant">Target</span>
+        <span class="font-number-display text-on-surface">{{ b.lo }}-{{ b.hi }}</span>
+      </div>
+      <div>
+        <div class="flex justify-between text-sm mb-2">
+          <span class="text-on-surface-variant">Deployed {{ b.deployed }}</span>
+          <span class="font-number-display text-primary">{{ b.pct }}%</span>
+        </div>
+        <div class="w-full h-2 rounded-full bg-surface-container-low overflow-hidden">
+          <div class="h-full rounded-full bg-primary" style="width: {{ b.pct }}%"></div>
+        </div>
+      </div>
+      <p class="font-body-sm text-body-sm text-on-surface-variant">{{ b.entry }} · {{ b.horizon }}</p>
+      <p class="font-body-sm text-body-sm text-on-surface">{{ b.thesis }}</p>
+    </article>
+    {% else %}
+    <div class="bg-surface rounded-xl p-8 shadow-card border border-[#E6E9F0] text-on-surface-variant">No buy rows found.</div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="bg-surface rounded-xl p-6 shadow-card border border-[#E6E9F0]">
+    <h2 class="font-h3 text-h3 text-on-surface mb-6">Execution Schedule</h2>
+    <div class="relative border-l-2 border-[#E6E9F0] pl-6 flex flex-col gap-8">
+      {% for m in sched %}
+      <div class="relative">
+        <span class="absolute -left-[33px] top-1 w-4 h-4 rounded-full {% if m.here %}bg-primary{% else %}bg-surface-container-high border border-[#E6E9F0]{% endif %}"></span>
+        <div class="flex items-center gap-2">
+          <h3 class="font-h3 text-h3 {% if m.here %}text-primary{% else %}text-on-surface{% endif %}">{{ m.label }}</h3>
+          {% if m.here %}<span class="rounded-full bg-secondary-container px-2 py-0.5 text-xs font-medium text-primary">You are here</span>{% endif %}
+        </div>
+        <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="rounded-lg bg-surface-container-low p-4">
+            <p class="font-label-caps text-label-caps uppercase text-on-surface-variant">Exits</p>
+            <p class="font-body-sm text-body-sm text-on-surface mt-1">{{ m.exits or 'No exits listed.' }}</p>
+          </div>
+          <div class="rounded-lg bg-surface-container-low p-4">
+            <p class="font-label-caps text-label-caps uppercase text-on-surface-variant">Buys</p>
+            <p class="font-body-sm text-body-sm text-on-surface mt-1">{{ m.buys or 'No buys listed.' }}</p>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}

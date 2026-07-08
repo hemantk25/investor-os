@@ -70,8 +70,24 @@ def create_app() -> Flask:
 
     @app.route("/rebalance")
     def rebalance():
-        return render_template("base.html", active="rebalance", page="Rebalance",
-                               members=[], member=None, freshness="", body="Rebalance coming soon")
+        pf = load_portfolio()
+        if pf is None:
+            return render_template("rebalance.html", **_empty("rebalance", "Rebalance"))
+        member = _member_arg()
+        common = vm.common(pf, "rebalance", member)
+        advp = DATA / "advisory.xlsx"
+        if not advp.exists():
+            return render_template("rebalance.html", page="Rebalance", empty=False,
+                                   no_adv=True, tab="exits", exits=[], buys=[],
+                                   sched=[], summary="", **common)
+        from datetime import date
+        adv = advisory.apply_status(advisory.parse_advisory(advp), pf, DATA, date.today())
+        ctx = vm.rebalance(pf, adv, request.args.get("tab", "exits"))
+        ctx.update(common)
+        ctx["page"] = "Rebalance"
+        ctx["empty"] = False
+        ctx["no_adv"] = False
+        return render_template("rebalance.html", **ctx)
 
     @app.route("/brief")
     def brief():

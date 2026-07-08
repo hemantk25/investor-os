@@ -118,8 +118,16 @@ def create_app() -> Flask:
 
     @app.route("/profile")
     def profile():
-        return render_template("base.html", active="profile", page="Investor Profile",
-                               members=[], member=None, freshness="", body="Profile coming soon")
+        pf = load_portfolio()
+        member = _member_arg()
+        ctx = vm.profile_ctx(BASE)
+        if pf is not None:
+            ctx.update(vm.common(pf, "profile", member))
+        else:
+            ctx.update(_empty("profile", "Investor Profile"))
+            ctx["empty"] = False
+        ctx["page"] = "Investor Profile"
+        return render_template("profile.html", **ctx)
 
     return app
 

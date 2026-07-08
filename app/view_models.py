@@ -117,3 +117,13 @@ def brief_ctx(base_dir, pf, pick: str | None) -> dict:
                            extensions=["extra"])
     return {"dates": dates, "chosen": chosen, "brief_html": html,
             "has_brief": bool(chosen)}
+
+
+def profile_ctx(base_dir) -> dict:
+    import markdown as md
+    p = base_dir / "profile" / "one-pager.md"
+    if p.exists():
+        return {"has_profile": True,
+                "profile_html": md.markdown(p.read_text(encoding="utf-8"),
+                                            extensions=["extra"])}
+    return {"has_profile": False, "profile_html": ""}

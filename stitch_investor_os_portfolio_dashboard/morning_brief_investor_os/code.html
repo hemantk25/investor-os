@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Investor OS - Morning Brief</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary": "#ffffff",
+                        "outline-variant": "#bdc9c6",
+                        "surface-container-low": "#f1f4f3",
+                        "on-secondary-fixed-variant": "#2e4c48",
+                        "surface-container": "#ebefed",
+                        "tertiary-fixed-dim": "#ffb598",
+                        "primary-fixed-dim": "#80d5cb",
+                        "primary-container": "#0f766e",
+                        "tertiary-container": "#9c573a",
+                        "outline": "#6e7977",
+                        "on-primary-fixed": "#00201d",
+                        "surface-variant": "#e0e3e1",
+                        "inverse-on-surface": "#eef1f0",
+                        "surface-container-high": "#e5e9e7",
+                        "primary": "#005c55",
+                        "on-tertiary-fixed": "#370e00",
+                        "secondary-fixed": "#c8e9e4",
+                        "error": "#ba1a1a",
+                        "inverse-surface": "#2d3130",
+                        "on-primary-fixed-variant": "#00504a",
+                        "on-tertiary-fixed-variant": "#72361b",
+                        "on-background": "#181c1c",
+                        "on-tertiary-container": "#ffe5db",
+                        "secondary": "#466460",
+                        "on-error": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "inverse-primary": "#80d5cb",
+                        "tertiary": "#7f4025",
+                        "primary-fixed": "#9cf2e8",
+                        "surface-dim": "#d7dbd9",
+                        "secondary-fixed-dim": "#accdc8",
+                        "on-surface-variant": "#3e4947",
+                        "error-container": "#ffdad6",
+                        "on-primary-container": "#a3faef",
+                        "on-secondary-fixed": "#00201d",
+                        "surface-bright": "#f7faf8",
+                        "tertiary-fixed": "#ffdbce",
+                        "on-secondary": "#ffffff",
+                        "surface-tint": "#006a63",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "background": "#f7faf8",
+                        "secondary-container": "#c5e6e1",
+                        "surface-container-highest": "#e0e3e1",
+                        "on-secondary-container": "#4a6864",
+                        "surface": "#f7faf8",
+                        "on-surface": "#181c1c"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin_desktop": "32px",
+                        "sidebar_width": "240px",
+                        "stack_lg": "24px",
+                        "stack_md": "16px",
+                        "stack_sm": "8px",
+                        "container_max_width": "1280px",
+                        "margin_mobile": "16px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Inter"],
+                        "h1-mobile": ["Manrope"],
+                        "label-caps": ["Inter"],
+                        "h2": ["Manrope"],
+                        "h1": ["Manrope"],
+                        "body-md": ["Inter"],
+                        "h3": ["Manrope"],
+                        "body-lg": ["Inter"],
+                        "number-display": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "h1-mobile": ["28px", { "lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "h2": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "h1": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "h3": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "number-display": ["24px", { "lineHeight": "32px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #d7dbd9;
+            border-radius: 20px;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md antialiased min-h-screen flex selection:bg-primary-container selection:text-on-primary-container">
+<!-- SideNavBar -->
+<nav class="hidden md:flex bg-surface fixed left-0 top-0 h-full w-[240px] border-r border-outline-variant flex flex-col py-margin_desktop px-stack_md z-50 shadow-[0_1px_3px_rgba(16,24,40,0.06)]">
+<div class="mb-stack_lg px-stack_sm flex items-center justify-between">
+<h1 class="font-h2 text-h2 font-bold text-primary">Investor OS</h1>
+</div>
+<div class="mb-stack_lg px-stack_sm">
+<!-- Member Switcher (Sidebar version) -->
+<div class="flex items-center bg-surface-container-high rounded-full p-1 border border-outline-variant/30">
+<button class="flex-1 py-1 px-3 rounded-full bg-primary text-on-primary font-body-sm text-body-sm text-center shadow-sm font-medium">All</button>
+<button class="flex-1 py-1 px-3 rounded-full text-on-surface-variant hover:text-primary transition-colors font-body-sm text-body-sm text-center">PK</button>
+<button class="flex-1 py-1 px-3 rounded-full text-on-surface-variant hover:text-primary transition-colors font-body-sm text-body-sm text-center">CK</button>
+</div>
+</div>
+<ul class="flex flex-col gap-1 flex-1">
+<li>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-highest transition-colors duration-200 cursor-pointer transition-all active:scale-95 group" href="#">
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors" data-icon="dashboard">dashboard</span>
+<span class="font-body-md text-body-md">Overview</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-highest transition-colors duration-200 cursor-pointer transition-all active:scale-95 group" href="#">
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors" data-icon="account_balance_wallet">account_balance_wallet</span>
+<span class="font-body-md text-body-md">Holdings</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-highest transition-colors duration-200 cursor-pointer transition-all active:scale-95 group" href="#">
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors" data-icon="published_with_changes">published_with_changes</span>
+<span class="font-body-md text-body-md">Rebalance</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-secondary-container text-primary font-medium cursor-pointer transition-all active:scale-95" href="#">
+<span class="material-symbols-outlined text-primary" data-icon="newspaper" data-weight="fill" style="font-variation-settings: 'FILL' 1;">newspaper</span>
+<span class="font-body-md text-body-md font-medium">Morning Brief</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-highest transition-colors duration-200 cursor-pointer transition-all active:scale-95 group" href="#">
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors" data-icon="person">person</span>
+<span class="font-body-md text-body-md">Investor Profile</span>
+</a>
+</li>
+</ul>
+<div class="mt-auto px-3 py-2 border-t border-outline-variant/50 pt-stack_md">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-variant border border-outline-variant overflow-hidden">
+<img alt="Avatar" class="w-full h-full object-cover" data-alt="A macro photograph of an abstract teal and silver titanium geometric sculpture representing modern wealth management, bright studio lighting, soft shadows, pristine corporate aesthetic, light mode." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCW6Hbr2066rbG14p1JrsiEfbdjFZSimv0Ml2H65b3Hzl79aMW9X32PxRYazlr4uwF1AVJdiu7Ko_zI-Uh19EHsTFgc3mcVS4tGXsRBDsbFDIlcy1fnEOMcdm9fsc0IeNQS_F4YqRjV0gYGvOoMKFS1jShV8bbEugp6WiN8pRAKpixZmhB8zovEdMbsvjMnSYwXBrgSVdb_K8jKlbQUp2EVFDnwIaHC6oo1mMo4Y7ak4FpRJrPa_yi3"/>
+</div>
+<div>
+<p class="font-body-sm text-body-sm font-medium text-on-surface">Paresh Karia</p>
+<p class="font-label-caps text-label-caps text-on-surface-variant">Private</p>
+</div>
+</div>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col md:ml-[240px] w-full max-w-full min-h-screen">
+<!-- TopAppBar (Mobile & Secondary Actions) -->
+<header class="bg-transparent docked full-width top-0 sticky z-40 flex justify-between items-center w-full px-margin_mobile md:px-margin_desktop py-stack_md transition-all backdrop-blur-md bg-background/80">
+<!-- Mobile Menu Toggle & Title -->
+<div class="flex items-center gap-4 md:hidden">
+<button class="text-on-surface-variant p-2 rounded-lg hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<h1 class="font-h2 text-h2 font-bold text-primary">Investor OS</h1>
+</div>
+<!-- Page Specific Title (Desktop) -->
+<div class="hidden md:block">
+<!-- Empty spacing block to align trailing actions -->
+</div>
+<div class="flex items-center gap-stack_md">
+<!-- Notifications & Settings -->
+<button aria-label="Notifications" class="text-on-surface-variant hover:opacity-80 transition-opacity p-2 rounded-full hover:bg-surface-container-low">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button aria-label="Settings" class="text-on-surface-variant hover:opacity-80 transition-opacity p-2 rounded-full hover:bg-surface-container-low">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+</div>
+</header>
+<!-- Page Content Canvas -->
+<div class="flex-1 px-margin_mobile md:px-margin_desktop pb-margin_desktop max-w-[container_max_width] mx-auto w-full">
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-stack_md mb-stack_lg pt-stack_sm">
+<div>
+<h2 class="font-h1-mobile md:font-h1 text-h1-mobile md:text-h1 text-on-background mb-1">Morning Brief</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Daily market intelligence customized for your portfolio allocation.</p>
+</div>
+<div class="flex flex-col sm:flex-row gap-stack_sm items-start sm:items-center">
+<!-- Date Picker Mimic -->
+<div class="flex items-center bg-surface border border-outline-variant rounded-lg px-4 py-2 hover:border-primary transition-colors cursor-pointer w-full sm:w-auto">
+<span class="material-symbols-outlined text-outline-variant mr-2 text-[20px]">calendar_today</span>
+<span class="font-body-sm text-body-sm text-on-surface font-medium whitespace-nowrap">Today, Oct 24</span>
+<span class="material-symbols-outlined text-outline-variant ml-2 text-[20px]">arrow_drop_down</span>
+</div>
+<!-- Primary Action -->
+<button class="flex items-center justify-center gap-2 bg-primary text-on-primary rounded-lg px-4 py-2 font-body-sm text-body-sm font-medium hover:bg-primary-container transition-colors shadow-sm w-full sm:w-auto group">
+<span class="material-symbols-outlined text-[18px] group-hover:rotate-12 transition-transform">bolt</span>
+                        Generate Brief
+                    </button>
+</div>
+</div>
+<!-- Bento Layout Content -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Main Brief Column -->
+<div class="lg:col-span-8 flex flex-col gap-gutter">
+<!-- AI Brief Card -->
+<div class="bg-surface rounded-xl border border-outline-variant/60 shadow-[0_1px_3px_rgba(16,24,40,0.06)] overflow-hidden relative flex flex-col">
+<!-- Decorative top edge -->
+<div class="h-1 w-full bg-gradient-to-r from-primary via-primary-fixed-dim to-transparent"></div>
+<div class="p-6 md:p-8 flex-1">
+<div class="flex items-center gap-2 mb-6 text-primary">
+<span class="material-symbols-outlined text-[20px] rounded bg-primary-container/10 p-1">psychology</span>
+<span class="font-label-caps text-label-caps tracking-widest uppercase">AI Executive Summary</span>
+</div>
+<div class="prose prose-sm md:prose-base max-w-none prose-headings:font-h3 prose-headings:text-on-background prose-p:font-body-md prose-p:text-on-surface-variant prose-p:leading-relaxed prose-strong:font-semibold prose-strong:text-on-surface space-y-8">
+<section>
+<h3 class="font-h3 text-h3 mb-3 flex items-center gap-2 border-b border-outline-variant/30 pb-2">
+<span class="material-symbols-outlined text-tertiary-container text-[20px]">public</span>
+                                        Markets Overnight
+                                    </h3>
+<p>Asian markets showed mixed sentiment following weak manufacturing data from China, while European indices opened higher driven by unexpected resilience in tech sector earnings. The US dollar strengthened slightly against major peers, pressuring emerging market equities. Treasuries remained flat as investors await the Fed's commentary later today.</p>
+</section>
+<section>
+<h3 class="font-h3 text-h3 mb-3 flex items-center gap-2 border-b border-outline-variant/30 pb-2">
+<span class="material-symbols-outlined text-secondary text-[20px]">target</span>
+                                        Impact on Your Portfolio
+                                    </h3>
+<p>Your heavy weighting in <strong>US Large Cap Tech (34%)</strong> positions you well to absorb the overnight volatility in emerging markets. However, the stronger dollar is creating a headwind for your European equity sleeve (-0.4% impact estimated today). Your fixed income duration strategy remains insulated from the current short-term yield fluctuations.</p>
+<div class="mt-4 bg-surface-container-low p-4 rounded-lg border border-outline-variant/40 flex items-start gap-4">
+<div class="mt-1 w-2 h-2 rounded-full bg-error flex-shrink-0"></div>
+<div>
+<p class="font-body-sm text-body-sm text-on-surface-variant m-0"><strong class="text-on-surface">Vulnerability Alert:</strong> The recent shift in semiconductor export controls may introduce near-term volatility to your bespoke Tech ETF holdings.</p>
+</div>
+</div>
+</section>
+<section>
+<h3 class="font-h3 text-h3 mb-3 flex items-center gap-2 border-b border-outline-variant/30 pb-2">
+<span class="material-symbols-outlined text-primary text-[20px]">lightbulb</span>
+                                        Suggested Actions
+                                    </h3>
+<ul class="list-none pl-0 space-y-3 font-body-sm text-body-sm">
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary text-[18px] mt-0.5">check_circle</span>
+<span><strong>Hold Current Cash Buffer:</strong> Maintain the current 5% cash position to deploy if tech sector pullbacks materialize post-earnings.</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary text-[18px] mt-0.5">check_circle</span>
+<span><strong>Review Rebalance Prompts:</strong> Your European equity allocation has drifted below target threshold. Consider reviewing the pending rebalance proposal.</span>
+</li>
+</ul>
+</section>
+</div>
+</div>
+<div class="bg-surface-container-low px-6 py-3 border-t border-outline-variant/40 flex justify-between items-center mt-auto">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Generated 08:30 AM</span>
+<div class="flex gap-2">
+<button aria-label="Share" class="text-outline hover:text-primary transition-colors p-1">
+<span class="material-symbols-outlined text-[18px]">share</span>
+</button>
+<button aria-label="Download PDF" class="text-outline hover:text-primary transition-colors p-1">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Secondary Column (Newsletter Digest) -->
+<div class="lg:col-span-4 flex flex-col gap-gutter">
+<!-- Market Snapshot Mini -->
+<div class="bg-surface rounded-xl border border-outline-variant/60 shadow-[0_1px_3px_rgba(16,24,40,0.06)] p-6">
+<h4 class="font-label-caps text-label-caps text-outline uppercase tracking-wider mb-4">Key Indices</h4>
+<div class="space-y-4">
+<div class="flex justify-between items-center">
+<span class="font-body-sm text-body-sm text-on-surface font-medium">S&amp;P 500</span>
+<div class="text-right">
+<div class="font-number-display text-body-md text-on-surface">5,842.10</div>
+<div class="font-body-sm text-body-sm text-primary flex items-center justify-end gap-1">
+<span class="material-symbols-outlined text-[14px]">arrow_upward</span>
+                                        0.34%
+                                    </div>
+</div>
+</div>
+<div class="h-px bg-outline-variant/30 w-full"></div>
+<div class="flex justify-between items-center">
+<span class="font-body-sm text-body-sm text-on-surface font-medium">Nasdaq</span>
+<div class="text-right">
+<div class="font-number-display text-body-md text-on-surface">18,315.59</div>
+<div class="font-body-sm text-body-sm text-primary flex items-center justify-end gap-1">
+<span class="material-symbols-outlined text-[14px]">arrow_upward</span>
+                                        0.51%
+                                    </div>
+</div>
+</div>
+<div class="h-px bg-outline-variant/30 w-full"></div>
+<div class="flex justify-between items-center">
+<span class="font-body-sm text-body-sm text-on-surface font-medium">US 10Y</span>
+<div class="text-right">
+<div class="font-number-display text-body-md text-on-surface">4.21%</div>
+<div class="font-body-sm text-body-sm text-error flex items-center justify-end gap-1">
+<span class="material-symbols-outlined text-[14px]">arrow_downward</span>
+                                        2 bps
+                                    </div>
+</div>
+</div>
+</div>
+</div>
+<!-- Weekly Digest Card -->
+<div class="bg-surface-bright rounded-xl border border-outline-variant/60 shadow-[0_1px_3px_rgba(16,24,40,0.06)] flex flex-col h-full">
+<div class="p-6 border-b border-outline-variant/40 bg-surface">
+<h3 class="font-h3 text-h3 text-on-background mb-1">Weekly Digest</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Curated context for the long-term investor.</p>
+</div>
+<div class="p-6 flex-1 flex flex-col gap-6">
+<!-- Digest Item 1 -->
+<div class="group cursor-pointer">
+<h4 class="font-label-caps text-label-caps text-primary uppercase tracking-wider mb-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">trending_up</span>
+                                    What Moved
+                                </h4>
+<p class="font-body-sm text-body-sm text-on-surface font-medium group-hover:text-primary transition-colors line-clamp-2">Utilities sector rallies as defensive rotation accelerates amidst rate uncertainty.</p>
+<span class="font-body-sm text-[12px] text-outline mt-1 block">3 min read</span>
+</div>
+<div class="h-px bg-outline-variant/30 w-full"></div>
+<!-- Digest Item 2 -->
+<div class="group cursor-pointer">
+<h4 class="font-label-caps text-label-caps text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">visibility_off</span>
+                                    News You Missed
+                                </h4>
+<p class="font-body-sm text-body-sm text-on-surface font-medium group-hover:text-primary transition-colors line-clamp-2">Alternative credit funds quietly tighten lending standards, signaling structural shifts in private markets.</p>
+<span class="font-body-sm text-[12px] text-outline mt-1 block">5 min read</span>
+</div>
+<div class="h-px bg-outline-variant/30 w-full"></div>
+<!-- Digest Item 3 -->
+<div class="group cursor-pointer">
+<h4 class="font-label-caps text-label-caps text-tertiary uppercase tracking-wider mb-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">gavel</span>
+                                    One Thing To Act On
+                                </h4>
+<p class="font-body-sm text-body-sm text-on-surface font-medium group-hover:text-primary transition-colors line-clamp-2">Tax-loss harvesting window opens earlier this year; review underperforming tech holdings before Q4 rush.</p>
+<span class="font-body-sm text-[12px] text-outline mt-1 block">Action Required</span>
+</div>
+</div>
+<a class="block p-4 text-center font-body-sm text-body-sm font-medium text-primary hover:bg-surface-container-low transition-colors border-t border-outline-variant/40 rounded-b-xl" href="#">
+                            View Full Digest Archive
+                        </a>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer -->
+<footer class="mt-auto flex justify-between items-center px-margin_mobile md:px-margin_desktop py-stack_sm w-full border-t border-outline-variant/30 bg-transparent text-outline font-body-sm text-body-sm opacity-70">
+<p>Updated 7 Jul 2026 · live prices</p>
+<div class="flex gap-4">
+<a class="hover:text-primary transition-colors" href="#">Terms</a>
+<a class="hover:text-primary transition-colors" href="#">Privacy</a>
+<a class="hover:text-primary transition-colors" href="#">Support</a>
+</div>
+</footer>
+</main>
+</body></html>

@@ -5,8 +5,6 @@ Stitch first to set the style. Then generate each screen using its block below
 (Stitch does one screen at a time — keep them in the same project so the style
 carries over). Everything is desktop-first web.
 
----
-
 ## 1) Design System + App Overview (paste this first)
 
 Design a clean, modern **fintech web dashboard** called **Investor OS** — a
@@ -54,8 +52,6 @@ easy on the eyes. NOT dark, NOT flashy. Light and quiet.
   NK · DK** (All selected by default, selected pill in teal). Below the title,
   a small muted line showing data freshness ("Updated 7 Jul 2026 · live prices").
 
----
-
 ## 2) Screen: Overview
 
 The landing screen. Top to bottom:
@@ -76,8 +72,6 @@ The landing screen. Top to bottom:
     ▲ +1.2%, INFY ▼ −0.6%, TCS ▼ −4.2% (gains green, losses red, value on right).
 - Keep it airy — this screen should feel calm and scannable.
 
----
-
 ## 3) Screen: Holdings
 
 A clean **data table** screen, white card.
@@ -92,8 +86,6 @@ A clean **data table** screen, white card.
   Tata Power; UTI Nifty 50 Index Fund, Parag Parikh Flexi Cap; Sovereign Gold
   Bonds; Bank FDs; Savings.
 - Quiet zebra striping or hairline row dividers — no heavy grid.
-
----
 
 ## 4) Screen: Rebalance
 
@@ -110,8 +102,6 @@ New Buys · Schedule**.
   2026… each with a short "exits / buys this month" note. Highlight the current
   month with a teal marker and a "You are here" label.
 
----
-
 ## 5) Screen: Morning Brief
 
 - A prominent **primary button** (teal, rounded): **"⚡ Generate Morning Brief"**,
@@ -123,8 +113,6 @@ New Buys · Schedule**.
 - A second card: **Weekly Newsletter** — a digest with "What moved", "News you
   may have missed", and "One thing to act on".
 
----
-
 ## 6) Screen: Investor Profile
 
 A rendered one-page document (like a clean article/doc view on a white card):
@@ -133,8 +121,6 @@ A rendered one-page document (like a clean article/doc view on a white card):
 - Sections styled as a document: **North Star** (a short paragraph),
   **Core Philosophy** (bullets), **Mindset Rules** (numbered), **Anti-Portfolio**
   (bullets). Calm typography, comfortable line length, plenty of whitespace.
-
----
 
 ## Tone notes for any generated copy
 Indian investor context, ₹ throughout, plain and confident language, no

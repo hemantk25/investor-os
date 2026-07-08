@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Investor OS - Rebalance</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config injected from Design System -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary": "#ffffff",
+                    "outline-variant": "#bdc9c6",
+                    "surface-container-low": "#f1f4f3",
+                    "on-secondary-fixed-variant": "#2e4c48",
+                    "surface-container": "#ebefed",
+                    "tertiary-fixed-dim": "#ffb598",
+                    "primary-fixed-dim": "#80d5cb",
+                    "primary-container": "#0f766e",
+                    "tertiary-container": "#9c573a",
+                    "outline": "#6e7977",
+                    "on-primary-fixed": "#00201d",
+                    "surface-variant": "#e0e3e1",
+                    "inverse-on-surface": "#eef1f0",
+                    "surface-container-high": "#e5e9e7",
+                    "primary": "#005c55",
+                    "on-tertiary-fixed": "#370e00",
+                    "secondary-fixed": "#c8e9e4",
+                    "error": "#ba1a1a",
+                    "inverse-surface": "#2d3130",
+                    "on-primary-fixed-variant": "#00504a",
+                    "on-tertiary-fixed-variant": "#72361b",
+                    "on-background": "#181c1c",
+                    "on-tertiary-container": "#ffe5db",
+                    "secondary": "#466460",
+                    "on-error": "#ffffff",
+                    "on-error-container": "#93000a",
+                    "inverse-primary": "#80d5cb",
+                    "tertiary": "#7f4025",
+                    "primary-fixed": "#9cf2e8",
+                    "surface-dim": "#d7dbd9",
+                    "secondary-fixed-dim": "#accdc8",
+                    "on-surface-variant": "#3e4947",
+                    "error-container": "#ffdad6",
+                    "on-primary-container": "#a3faef",
+                    "on-secondary-fixed": "#00201d",
+                    "surface-bright": "#f7faf8",
+                    "tertiary-fixed": "#ffdbce",
+                    "on-secondary": "#ffffff",
+                    "surface-tint": "#006a63",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "background": "#f7faf8",
+                    "secondary-container": "#c5e6e1",
+                    "surface-container-highest": "#e0e3e1",
+                    "on-secondary-container": "#4a6864",
+                    "surface": "#f7faf8",
+                    "on-surface": "#181c1c"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "margin_desktop": "32px",
+                    "sidebar_width": "240px",
+                    "stack_lg": "24px",
+                    "stack_md": "16px",
+                    "stack_sm": "8px",
+                    "container_max_width": "1280px",
+                    "margin_mobile": "16px",
+                    "gutter": "24px"
+            },
+            "fontFamily": {
+                    "body-sm": ["Inter"],
+                    "h1-mobile": ["Manrope"],
+                    "label-caps": ["Inter"],
+                    "h2": ["Manrope"],
+                    "h1": ["Manrope"],
+                    "body-md": ["Inter"],
+                    "h3": ["Manrope"],
+                    "body-lg": ["Inter"],
+                    "number-display": ["Inter"]
+            },
+            "fontSize": {
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "h1-mobile": ["28px", {"lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "h2": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "h1": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "h3": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "number-display": ["24px", {"lineHeight": "32px", "fontWeight": "600"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        /* Base typography application */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: theme('colors.background');
+            color: theme('colors.on-background');
+        }
+        
+        /* Custom scrollbar for data tables */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: theme('colors.surface-variant');
+            border-radius: 20px;
+        }
+        
+        /* Material symbols specific overrides */
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-fill {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        /* Hide scrollbar for layout */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="flex min-h-screen bg-background font-body-md text-body-md antialiased overflow-x-hidden">
+<!-- JSON Component: SideNavBar -->
+<nav class="fixed left-0 top-0 h-full w-[240px] bg-surface dark:bg-surface-container-low border-r border-outline-variant dark:border-outline flex flex-col py-margin_desktop px-stack_md z-50">
+<!-- Header / Logo -->
+<div class="flex items-center gap-stack_md mb-12 px-2">
+<div class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-h3 text-h3 flex-shrink-0">
+                IO
+            </div>
+<div class="flex flex-col">
+<span class="font-h2 text-h2 font-bold text-primary dark:text-primary-fixed-dim leading-none tracking-tight">Investor OS</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-1">Private · Paresh Karia</span>
+</div>
+</div>
+<!-- Navigation Links -->
+<div class="flex flex-col gap-2 flex-1">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-outline hover:text-primary dark:hover:text-primary-fixed-dim hover:bg-surface-container-highest dark:hover:bg-surface-container-high transition-colors duration-200 cursor-pointer active:scale-95 group" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:icon-fill transition-all">dashboard</span>
+<span class="font-body-md text-body-md">Overview</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-outline hover:text-primary dark:hover:text-primary-fixed-dim hover:bg-surface-container-highest dark:hover:bg-surface-container-high transition-colors duration-200 cursor-pointer active:scale-95 group" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:icon-fill transition-all">account_balance_wallet</span>
+<span class="font-body-md text-body-md">Holdings</span>
+</a>
+<!-- Active Tab: Rebalance -->
+<a class="flex items-center gap-3 px-4 py-3 bg-secondary-container dark:bg-primary-container text-primary dark:text-on-primary-container rounded-lg font-medium cursor-pointer transition-all active:scale-95" href="#">
+<span class="material-symbols-outlined icon-fill text-[20px]">published_with_changes</span>
+<span class="font-body-md text-body-md font-medium">Rebalance</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-outline hover:text-primary dark:hover:text-primary-fixed-dim hover:bg-surface-container-highest dark:hover:bg-surface-container-high transition-colors duration-200 cursor-pointer active:scale-95 group" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:icon-fill transition-all">newspaper</span>
+<span class="font-body-md text-body-md">Morning Brief</span>
+</a>
+</div>
+<!-- Bottom Link -->
+<div class="mt-auto pt-4 border-t border-outline-variant/30">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-outline hover:text-primary dark:hover:text-primary-fixed-dim hover:bg-surface-container-highest dark:hover:bg-surface-container-high transition-colors duration-200 cursor-pointer active:scale-95 group" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:icon-fill transition-all">person</span>
+<span class="font-body-md text-body-md">Investor Profile</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 ml-[240px] flex flex-col min-h-screen">
+<!-- JSON Component: TopAppBar -->
+<header class="flex justify-between items-center w-full px-margin_desktop py-stack_md bg-background sticky top-0 z-40">
+<div class="flex-1">
+<!-- Title is handled in page content header for better hierarchy as per design spec, keeping top app bar minimal -->
+</div>
+<div class="flex items-center gap-stack_md">
+<!-- Member Switcher -->
+<div class="hidden md:flex bg-surface-container rounded-full p-1 border border-outline-variant/20 shadow-sm">
+<button class="px-4 py-1.5 rounded-full text-body-sm font-medium bg-primary text-on-primary shadow-sm transition-all">All</button>
+<button class="px-4 py-1.5 rounded-full text-body-sm font-medium text-on-surface-variant hover:text-primary transition-all">PK</button>
+<button class="px-4 py-1.5 rounded-full text-body-sm font-medium text-on-surface-variant hover:text-primary transition-all">CK</button>
+</div>
+<div class="h-6 w-px bg-outline-variant/30 mx-2 hidden md:block"></div>
+<button class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-highest transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-highest transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+</header>
+<!-- Canvas -->
+<div class="max-w-[1280px] w-full mx-auto px-margin_desktop pb-margin_desktop flex-1 flex flex-col">
+<!-- Page Header -->
+<div class="mb-8 pt-4">
+<h1 class="font-h1 text-h1 text-on-background mb-2">Rebalance</h1>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-2xl">Review and execute your portfolio adjustment strategy. Aligning current holdings with long-term targets.</p>
+</div>
+<!-- Tab Navigation (In-page) -->
+<div class="flex items-center border-b border-outline-variant/50 mb-8 w-full gap-8">
+<button class="pb-4 font-h3 text-h3 text-primary border-b-2 border-primary transition-all relative top-[1px]" id="tab-btn-exits" onclick="switchTab('exits')">Exits</button>
+<button class="pb-4 font-h3 text-h3 text-on-surface-variant hover:text-primary transition-all relative top-[1px]" id="tab-btn-buys" onclick="switchTab('buys')">New Buys</button>
+<button class="pb-4 font-h3 text-h3 text-on-surface-variant hover:text-primary transition-all relative top-[1px]" id="tab-btn-schedule" onclick="switchTab('schedule')">Schedule</button>
+</div>
+<!-- TAB CONTENT: EXITS (Active) -->
+<div class="flex-1 block animate-fade-in" id="tab-exits">
+<div class="bg-surface rounded-xl border border-outline-variant/60 shadow-[0_1px_3px_rgba(16,24,40,0.04)] overflow-hidden">
+<div class="p-6 border-b border-outline-variant/30 flex justify-between items-center bg-surface-bright/50">
+<h2 class="font-h3 text-h3 text-on-background">Identified Exits</h2>
+<button class="flex items-center gap-2 px-4 py-2 bg-primary/5 text-primary rounded-lg font-body-sm hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined text-[18px]">download</span>
+                            Export List
+                        </button>
+</div>
+<div class="overflow-x-auto custom-scrollbar">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr>
+<th class="py-4 px-6 font-label-caps text-label-caps text-outline uppercase tracking-wider font-medium border-b border-outline-variant/40 bg-surface-bright">Stock</th>
+<th class="py-4 px-6 font-label-caps text-label-caps text-outline uppercase tracking-wider font-medium border-b border-outline-variant/40 bg-surface-bright">Status</th>
+<th class="py-4 px-6 font-label-caps text-label-caps text-outline uppercase tracking-wider font-medium border-b border-outline-variant/40 bg-surface-bright">Priority</th>
+<th class="py-4 px-6 font-label-caps text-label-caps text-outline uppercase tracking-wider font-medium border-b border-outline-variant/40 bg-surface-bright text-right">Est. Proceeds</th>
+<th class="py-4 px-6 font-label-caps text-label-caps text-outline uppercase tracking-wider font-medium border-b border-outline-variant/40 bg-surface-bright">Reason</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/30">
+<!-- Row 1: Done -->
+<tr class="hover:bg-surface-container-lowest/50 transition-colors group">
+<td class="py-5 px-6">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-surface-variant flex items-center justify-center font-body-sm font-medium text-on-surface-variant">GE</div>
+<span class="font-body-md text-body-md text-on-background font-medium">Gensol Engineering</span>
+</div>
+</td>
+<td class="py-5 px-6">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[13px] font-medium bg-secondary-fixed text-on-secondary-fixed">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                                            Done
+                                        </span>
+</td>
+<td class="py-5 px-6 font-body-sm text-body-sm text-on-surface-variant">High</td>
+<td class="py-5 px-6 font-number-display text-number-display text-on-background text-right">₹1,20,500</td>
+<td class="py-5 px-6 font-body-sm text-body-sm text-outline">Target price achieved, overvalued relative to peers.</td>
+</tr>
+<!-- Row 2: In Progress -->
+<tr class="hover:bg-surface-container-lowest/50 transition-colors group">
+<td class="py-5 px-6">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-surface-variant flex items-center justify-center font-body-sm font-medium text-on-surface-variant">WI</div>
+<span class="font-body-md text-body-md text-on-background font-medium">Wipro Ltd</span>
+</div>
+</td>
+<td class="py-5 px-6">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[13px] font-medium bg-tertiary-fixed text-on-tertiary-fixed">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+                                            In Progress
+                                        </span>
+</td>
+<td class="py-5 px-6 font-body-sm text-body-sm text-on-surface-variant">Medium</td>
+<td class="py-5 px-6 font-number-display text-number-display text-on-background text-right">₹85,200</td>
+<td class="py-5 px-6 font-body-sm text-body-sm text-outline">Sector rotation away from IT. Phased selling over 3 days.</td>
+</tr>
+<!-- Row 3: Pending -->
+<tr class="hover:bg-surface-container-lowest/50 transition-colors group">
+<td class="py-5 px-6">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-surface-variant flex items-center justify-center font-body-sm font-medium text-on-surface-variant">YB</div>
+<span class="font-body-md text-body-md text-on-background font-medium">Yes Bank</span>
+</div>
+</td>
+<td class="py-5 px-6">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[13px] font-medium bg-surface-variant text-on-surface-variant">
+<span class="w-1.5 h-1.5 rounded-full bg-outline"></span>
+                                            Pending
+                                        </span>
+</td>
+<td class="py-5 px-6 font-body-sm text-body-sm text-on-surface-variant">Low</td>
+<td class="py-5 px-6 font-number-display text-number-display text-on-background text-right">₹45,000</td>
+<td class="py-5 px-6 font-body-sm text-body-sm text-outline">Consolidation holding. Awaiting Q3 results before exit.</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- TAB CONTENT: NEW BUYS (Hidden by default) -->
+<div class="flex-1 hidden animate-fade-in" id="tab-buys">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Card 1 -->
+<div class="bg-surface rounded-xl border border-outline-variant/60 p-6 flex flex-col hover:border-primary/40 transition-colors shadow-[0_1px_3px_rgba(16,24,40,0.02)]">
+<div class="flex justify-between items-start mb-4">
+<div>
+<div class="text-label-caps font-label-caps text-outline uppercase tracking-wider mb-1">Healthcare</div>
+<h3 class="font-h3 text-h3 text-on-background">Apollo Hospitals</h3>
+</div>
+<button class="text-primary hover:bg-surface-container p-1.5 rounded transition-colors">
+<span class="material-symbols-outlined text-[20px]">add</span>
+</button>
+</div>
+<div class="mt-auto pt-6">
+<div class="flex justify-between items-end mb-2">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Target Allocation</span>
+<span class="font-number-display text-[18px] font-semibold text-on-background">₹5L - ₹7L</span>
+</div>
+<div class="w-full h-1.5 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full w-0" style="width: 25%"></div>
+</div>
+<div class="flex justify-between mt-2 font-label-caps text-[11px] text-outline">
+<span>Current: ₹0</span>
+<span>Goal: ₹6L</span>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface rounded-xl border border-outline-variant/60 p-6 flex flex-col hover:border-primary/40 transition-colors shadow-[0_1px_3px_rgba(16,24,40,0.02)]">
+<div class="flex justify-between items-start mb-4">
+<div>
+<div class="text-label-caps font-label-caps text-outline uppercase tracking-wider mb-1">Defense</div>
+<h3 class="font-h3 text-h3 text-on-background">Bharat Dynamics</h3>
+</div>
+<button class="text-primary hover:bg-surface-container p-1.5 rounded transition-colors">
+<span class="material-symbols-outlined text-[20px]">add</span>
+</button>
+</div>
+<div class="mt-auto pt-6">
+<div class="flex justify-between items-end mb-2">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Target Allocation</span>
+<span class="font-number-display text-[18px] font-semibold text-on-background">₹4L - ₹5L</span>
+</div>
+<div class="w-full h-1.5 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full w-0" style="width: 0%"></div>
+</div>
+<div class="flex justify-between mt-2 font-label-caps text-[11px] text-outline">
+<span>Current: ₹0</span>
+<span>Goal: ₹4.5L</span>
+</div>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-surface rounded-xl border border-outline-variant/60 p-6 flex flex-col hover:border-primary/40 transition-colors shadow-[0_1px_3px_rgba(16,24,40,0.02)]">
+<div class="flex justify-between items-start mb-4">
+<div>
+<div class="text-label-caps font-label-caps text-outline uppercase tracking-wider mb-1">Energy</div>
+<h3 class="font-h3 text-h3 text-on-background">JSW Energy</h3>
+</div>
+<button class="text-primary hover:bg-surface-container p-1.5 rounded transition-colors">
+<span class="material-symbols-outlined text-[20px]">add</span>
+</button>
+</div>
+<div class="mt-auto pt-6">
+<div class="flex justify-between items-end mb-2">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Target Allocation</span>
+<span class="font-number-display text-[18px] font-semibold text-on-background">₹8L - ₹10L</span>
+</div>
+<div class="w-full h-1.5 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full w-0" style="width: 40%"></div>
+</div>
+<div class="flex justify-between mt-2 font-label-caps text-[11px] text-outline">
+<span>Current: ₹3.2L</span>
+<span>Goal: ₹9L</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- TAB CONTENT: SCHEDULE (Hidden by default) -->
+<div class="flex-1 hidden animate-fade-in max-w-3xl" id="tab-schedule">
+<div class="relative border-l-2 border-outline-variant/30 ml-4 py-4 space-y-12">
+<!-- Timeline Item 1 (Active) -->
+<div class="relative pl-8">
+<!-- Marker -->
+<div class="absolute -left-[9px] top-1.5 w-4 h-4 rounded-full bg-primary border-4 border-background shadow-sm"></div>
+<div class="mb-1 flex items-center gap-3">
+<h3 class="font-h3 text-h3 text-on-background">July 2026</h3>
+<span class="px-2 py-0.5 rounded text-[11px] font-label-caps tracking-wider bg-secondary-container text-on-secondary-container">YOU ARE HERE</span>
+</div>
+<div class="bg-surface rounded-xl border border-outline-variant/50 p-5 mt-4 shadow-sm">
+<ul class="space-y-4">
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary text-[20px] mt-0.5">check_circle</span>
+<div>
+<p class="font-body-md text-on-background font-medium">Execute Gensol Engineering Exit</p>
+<p class="font-body-sm text-outline mt-1">Free up approximately ₹1.2L in capital.</p>
+</div>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-tertiary-container text-[20px] mt-0.5">schedule</span>
+<div>
+<p class="font-body-md text-on-background font-medium">Initiate Apollo Hospitals Buy</p>
+<p class="font-body-sm text-outline mt-1">Begin tranche 1 buying (₹2L) utilizing Gensol proceeds.</p>
+</div>
+</li>
+</ul>
+</div>
+</div>
+<!-- Timeline Item 2 -->
+<div class="relative pl-8 opacity-70 hover:opacity-100 transition-opacity">
+<!-- Marker -->
+<div class="absolute -left-[9px] top-1.5 w-4 h-4 rounded-full bg-surface border-2 border-outline-variant shadow-sm"></div>
+<div class="mb-1">
+<h3 class="font-h3 text-h3 text-on-surface-variant">August 2026</h3>
+</div>
+<div class="bg-surface/50 rounded-xl border border-outline-variant/30 p-5 mt-4">
+<ul class="space-y-4">
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-outline text-[20px] mt-0.5">visibility</span>
+<div>
+<p class="font-body-md text-on-surface-variant font-medium">Monitor Yes Bank</p>
+<p class="font-body-sm text-outline mt-1">Review Q3 earnings report prior to final exit decision.</p>
+</div>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-outline text-[20px] mt-0.5">trending_up</span>
+<div>
+<p class="font-body-md text-on-surface-variant font-medium">Complete JSW Energy Allocation</p>
+<p class="font-body-sm text-outline mt-1">Target reaching ₹9L allocation depending on market dips.</p>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- JSON Component: Footer -->
+<footer class="mt-auto flex justify-between items-center px-margin_desktop py-stack_sm bg-transparent border-t border-outline-variant/20">
+<div class="font-body-sm text-body-sm text-outline opacity-70">
+                Updated 7 Jul 2026 · live prices
+            </div>
+<div class="flex items-center gap-stack_lg">
+<a class="font-body-sm text-body-sm text-outline hover:text-primary transition-colors opacity-70 hover:opacity-100" href="#">Terms</a>
+<a class="font-body-sm text-body-sm text-outline hover:text-primary transition-colors opacity-70 hover:opacity-100" href="#">Privacy</a>
+<a class="font-body-sm text-body-sm text-outline hover:text-primary transition-colors opacity-70 hover:opacity-100" href="#">Support</a>
+</div>
+</footer>
+</main>
+<!-- Tab Switching Logic -->
+<style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+    </style>
+<script>
+        function switchTab(tabId) {
+            // Hide all contents
+            document.getElementById('tab-exits').classList.add('hidden');
+            document.getElementById('tab-buys').classList.add('hidden');
+            document.getElementById('tab-schedule').classList.add('hidden');
+            
+            // Reset all buttons styling
+            const buttons = ['exits', 'buys', 'schedule'];
+            buttons.forEach(id => {
+                const btn = document.getElementById('tab-btn-' + id);
+                btn.className = "pb-4 font-h3 text-h3 text-on-surface-variant hover:text-primary transition-all relative top-[1px]";
+            });
+            
+            // Show selected content
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+            
+            // Highlight selected button
+            const activeBtn = document.getElementById('tab-btn-' + tabId);
+            activeBtn.className = "pb-4 font-h3 text-h3 text-primary border-b-2 border-primary transition-all relative top-[1px]";
+        }
+    </script>
+</body></html>

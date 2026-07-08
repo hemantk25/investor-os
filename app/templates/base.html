@@ -1,3 +1,55 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8">
-<title>Investor OS — {{ page }}</title></head>
-<body><h1>{{ page }}</h1><div>{{ body }}</div></body></html>
+{% from "_icons.html" import icon %}
+<!doctype html>
+<html lang="en" class="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Investor OS — {{ page }}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md min-h-screen flex antialiased">
+<!-- SideNavBar -->
+<aside class="hidden md:flex fixed left-0 top-0 h-full w-[240px] bg-surface border-r border-outline-variant flex-col py-margin_desktop px-stack_md z-50">
+  <div class="mb-10 px-2 flex flex-col items-start">
+    <h2 class="font-h2 text-h2 font-bold text-primary">Investor OS</h2>
+    <p class="font-body-sm text-body-sm text-primary mt-1">Private · Paresh Karia</p>
+  </div>
+  <nav class="flex flex-col gap-1 w-full flex-grow">
+    {% set nav_items = [
+      ('overview', '/', 'dashboard', 'Overview'),
+      ('holdings', '/holdings', 'wallet', 'Holdings'),
+      ('rebalance', '/rebalance', 'rebalance', 'Rebalance'),
+      ('brief', '/brief', 'news', 'Morning Brief'),
+      ('profile', '/profile', 'person', 'Investor Profile'),
+    ] %}
+    {% for key, href, ic, label in nav_items %}
+    <a href="{{ href }}" class="flex items-center gap-3 px-4 py-3 rounded-lg font-body-md text-body-md cursor-pointer active:scale-95 transition-all {% if key == active %}bg-secondary-container text-primary font-medium{% else %}text-on-surface-variant hover:text-primary hover:bg-surface-container-highest transition-colors duration-200{% endif %}">
+      {{ icon(ic) }}
+      <span>{{ label }}</span>
+    </a>
+    {% endfor %}
+  </nav>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 ml-0 md:ml-[240px] flex flex-col min-h-screen">
+  <!-- TopAppBar -->
+  <header class="sticky top-0 z-40 bg-background flex justify-between items-start w-full px-margin_desktop py-stack_md">
+    <div>
+      <h1 class="font-h1 text-h1">{{ page }}</h1>
+      {% if freshness %}<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">{{ freshness }}</p>{% endif %}
+    </div>
+    <!-- Member Switcher -->
+    <div class="flex items-center bg-[#E6F4F1] rounded-full p-1 border border-[#E6E9F0]">
+      {% for m in ['All'] + members %}
+      {% set is_selected = (m == 'All' and not member) or (member == m) %}
+      <a href="{{ request.path }}{% if m != 'All' %}?member={{ m }}{% endif %}" class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors {% if is_selected %}bg-primary text-white{% else %}text-primary hover:bg-white/50{% endif %}">{{ m }}</a>
+      {% endfor %}
+    </div>
+  </header>
+  <!-- Canvas -->
+  <div class="flex-1 w-full max-w-container_max_width mx-auto px-margin_desktop py-stack_lg flex flex-col gap-stack_lg">
+    {% block content %}{% endblock %}
+  </div>
+</main>
+</body>
+</html>

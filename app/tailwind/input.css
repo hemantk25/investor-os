@@ -1,0 +1,18 @@
+@font-face { font-family:'Inter'; font-weight:400; font-display:swap; src:url('/static/fonts/inter-400.woff2') format('woff2'); }
+@font-face { font-family:'Inter'; font-weight:500; font-display:swap; src:url('/static/fonts/inter-500.woff2') format('woff2'); }
+@font-face { font-family:'Inter'; font-weight:600; font-display:swap; src:url('/static/fonts/inter-600.woff2') format('woff2'); }
+@font-face { font-family:'Inter'; font-weight:700; font-display:swap; src:url('/static/fonts/inter-700.woff2') format('woff2'); }
+@font-face { font-family:'Manrope'; font-weight:600; font-display:swap; src:url('/static/fonts/manrope-600.woff2') format('woff2'); }
+@font-face { font-family:'Manrope'; font-weight:700; font-display:swap; src:url('/static/fonts/manrope-700.woff2') format('woff2'); }
+@font-face { font-family:'Manrope'; font-weight:800; font-display:swap; src:url('/static/fonts/manrope-800.woff2') format('woff2'); }
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body { font-family:'Inter',system-ui,sans-serif; background:#f7faf8; color:#181c1c; }
+h1,h2,h3 { font-family:'Manrope',system-ui,sans-serif; }
+.tnum { font-variant-numeric: tabular-nums; }
+.hairline-border { border-color:#E6E9F0; border-width:1px; }
+.soft-shadow { box-shadow:0 1px 3px rgba(16,24,40,0.06); }
+.table-row-hover:hover { background-color:#ffffff; }

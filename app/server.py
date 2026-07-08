@@ -28,6 +28,11 @@ def _empty(active, page):
             "freshness": "", "empty": True}
 
 
+def _member_arg():
+    member = request.args.get("member") or None
+    return None if member == "All" else member
+
+
 def create_app() -> Flask:
     app = Flask(__name__, template_folder="templates", static_folder="static")
 
@@ -40,8 +45,7 @@ def create_app() -> Flask:
         pf = load_portfolio()
         if pf is None:
             return render_template("overview.html", **_empty("overview", "Overview"))
-        member = request.args.get("member") or None
-        member = None if member == "All" else member
+        member = _member_arg()
         rng = request.args.get("range", "6M")
         ctx = vm.overview(pf, member, rng)
         hist = prices.fetch_history([c.nse_symbol for c in pf.consolidated(member) if c.nse_symbol],
@@ -54,8 +58,15 @@ def create_app() -> Flask:
 
     @app.route("/holdings")
     def holdings():
-        return render_template("base.html", active="holdings", page="Holdings",
-                               members=[], member=None, freshness="", body="Holdings coming soon")
+        pf = load_portfolio()
+        if pf is None:
+            return render_template("holdings.html", **_empty("holdings", "Holdings"))
+        member = _member_arg()
+        ctx = vm.holdings(pf, member, request.args.get("q", ""))
+        ctx.update(vm.common(pf, "holdings", member))
+        ctx["page"] = "Holdings"
+        ctx["empty"] = False
+        return render_template("holdings.html", **ctx)
 
     @app.route("/rebalance")
     def rebalance():

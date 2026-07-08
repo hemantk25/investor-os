@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% block content %}
+{% if empty %}
+<div class="flex-1 flex items-center justify-center py-24">
+  <div class="flex flex-col items-center justify-center text-center bg-surface rounded-xl p-12 shadow-card border border-[#E6E9F0] max-w-lg">
+    <div class="w-16 h-16 rounded-full bg-secondary-container flex items-center justify-center mb-4 text-primary">
+      {{ icon('download') }}
+    </div>
+    <h2 class="font-h3 text-h3 text-on-surface mb-2">No holdings yet</h2>
+    <p class="font-body-md text-body-md text-on-surface-variant">Drop the ICICI export into <code class="px-1.5 py-0.5 rounded bg-surface-container-low text-primary font-medium">data/holdings.xlsx</code> and refresh this page.</p>
+  </div>
+</div>
+{% else %}
+<section class="bg-surface rounded-xl shadow-card border border-[#E6E9F0] overflow-hidden">
+  <div class="p-6 border-b border-[#E6E9F0] flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <h2 class="font-h3 text-h3 text-on-surface">Portfolio Holdings</h2>
+      <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Grouped by asset class from your ICICI export and extras file.</p>
+    </div>
+    <form method="get" action="/holdings" class="relative w-full md:w-[360px]">
+      {% if member %}<input type="hidden" name="member" value="{{ member }}">{% endif %}
+      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">{{ icon('search') }}</span>
+      <input name="q" value="{{ q }}" placeholder="Filter by name or symbol..." class="w-full rounded-lg border border-[#E6E9F0] bg-white py-2.5 pl-11 pr-4 font-body-sm text-body-sm text-on-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/10">
+    </form>
+  </div>
+
+  {% if groups %}
+  <div class="overflow-x-auto">
+    <table class="w-full border-collapse">
+      <thead class="bg-surface-container-low text-left">
+        <tr class="font-label-caps text-label-caps text-on-surface-variant uppercase">
+          <th class="px-6 py-3 font-medium">Stock</th>
+          <th class="px-4 py-3 font-medium">NSE</th>
+          <th class="px-4 py-3 font-medium text-right">Qty</th>
+          <th class="px-4 py-3 font-medium text-right">Avg Cost</th>
+          <th class="px-4 py-3 font-medium text-right">Price</th>
+          <th class="px-4 py-3 font-medium text-right">Value</th>
+          <th class="px-4 py-3 font-medium text-right">P/L %</th>
+          <th class="px-4 py-3 font-medium text-right">Day %</th>
+          <th class="px-6 py-3 font-medium">Held By</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for g in groups %}
+        <tr class="bg-background">
+          <td colspan="9" class="px-6 py-3 border-y border-[#E6E9F0]">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="font-h3 text-h3 text-primary">{{ g.title }}</span>
+                {% if g.tag %}<span class="rounded-full bg-secondary-container px-2 py-0.5 text-xs font-medium text-primary">{{ g.tag }}</span>{% endif %}
+              </div>
+              <span class="font-number-display text-number-display text-on-surface">{{ g.subtotal }}</span>
+            </div>
+          </td>
+        </tr>
+        {% for r in g.rows %}
+        <tr class="table-row-hover border-b border-[#E6E9F0]">
+          <td class="px-6 py-4">
+            <div class="flex flex-col">
+              <span class="font-body-sm text-body-sm font-medium text-on-surface">{{ r.name }}</span>
+              <div class="mt-1 flex flex-wrap gap-1">
+                {% if not r.live %}<span class="rounded-full bg-surface-container-low px-2 py-0.5 text-xs text-outline">stale price</span>{% endif %}
+                {% if not r.pl_known %}<span class="rounded-full bg-surface-container-low px-2 py-0.5 text-xs text-outline">cost missing</span>{% endif %}
+                {% if r.is_extra %}<span class="rounded-full bg-secondary-container px-2 py-0.5 text-xs text-primary">manual asset</span>{% endif %}
+                {% if r.note %}<span class="text-xs text-on-surface-variant">{{ r.note }}</span>{% endif %}
+              </div>
+            </div>
+          </td>
+          <td class="px-4 py-4 font-body-sm text-body-sm text-on-surface-variant">{{ r.nse }}</td>
+          <td class="px-4 py-4 text-right font-number-display text-sm text-on-surface">{% if r.qty is not none %}{{ '%.2f'|format(r.qty) }}{% else %}&mdash;{% endif %}</td>
+          <td class="px-4 py-4 text-right font-number-display text-sm text-on-surface-variant">{% if r.avg is not none %}&#8377;{{ '%.2f'|format(r.avg) }}{% else %}&mdash;{% endif %}</td>
+          <td class="px-4 py-4 text-right font-number-display text-sm text-on-surface-variant">{% if r.price is not none %}&#8377;{{ '%.2f'|format(r.price) }}{% else %}&mdash;{% endif %}</td>
+          <td class="px-4 py-4 text-right font-number-display text-sm font-medium text-on-surface">{{ r.value }}</td>
+          <td class="px-4 py-4 text-right font-number-display text-sm {% if r.pl_known and r.pl_up %}text-status-success{% elif r.pl_known %}text-status-error{% else %}text-outline{% endif %}">{{ r.pl }}</td>
+          <td class="px-4 py-4 text-right font-number-display text-sm {% if r.day_known and r.day_up %}text-status-success{% elif r.day_known %}text-status-error{% else %}text-outline{% endif %}">{{ r.day }}</td>
+          <td class="px-6 py-4">
+            <div class="flex flex-wrap gap-1">
+              {% for h in r.held_by %}
+              <span class="rounded-full bg-surface-container-low px-2 py-0.5 text-xs font-medium text-primary">{{ h }}</span>
+              {% endfor %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="p-12 text-center">
+    <h3 class="font-h3 text-h3 text-on-surface">No matching holdings</h3>
+    <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Clear the search filter to see the full portfolio.</p>
+  </div>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}

@@ -56,7 +56,24 @@ def holdings(pf, member, q: str) -> dict:
                          "pl_up": (c.pl_pct or 0) >= 0, "pl_known": c.pl_pct is not None,
                          "day": (pmod.fmt_pct(c.day_pct) if c.day_pct is not None else "—"),
                          "day_up": (c.day_pct or 0) >= 0, "day_known": c.day_pct is not None,
-                         "held_by": c.held_by, "live": c.price_live})
+                         "held_by": c.held_by, "live": c.price_live,
+                         "is_extra": False, "note": ""})
+        for e in [x for x in pf.extras if member is None or x.member == member]:
+            if e.asset_class != key:
+                continue
+            haystack = f"{e.label} {e.asset_class} {e.note}".lower()
+            if ql and ql not in haystack:
+                continue
+            sub += e.value
+            pl_pct = (e.value / e.invested - 1) * 100 if e.invested else None
+            rows.append({"name": e.label, "nse": tag or "—", "qty": None,
+                         "avg": e.invested, "price": None,
+                         "value": pmod.fmt_short(e.value),
+                         "pl": (pmod.fmt_pct(pl_pct) if pl_pct is not None else "—"),
+                         "pl_up": (pl_pct or 0) >= 0, "pl_known": pl_pct is not None,
+                         "day": "—", "day_up": True, "day_known": False,
+                         "held_by": [e.member], "live": True,
+                         "is_extra": True, "note": e.note})
         if rows:
             groups.append({"key": key, "title": title, "tag": tag, "rows": rows,
                            "subtotal": pmod.fmt_short(sub)})

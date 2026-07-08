@@ -35,4 +35,20 @@ def alloc_segments(totals) -> list[dict]:
 
 
 def portfolio_series(pf, member, history) -> list:
-    return []  # filled in Task 4
+    if not history:
+        return []
+    cons = pf.consolidated(member)
+    lengths = [len(history[c.nse_symbol]) for c in cons if c.nse_symbol in history]
+    if not lengths:
+        return []
+    n = min(lengths)
+    nonmarket = sum(v for v in pf.totals(member).extras_by_class.values())
+    series = []
+    for i in range(n):
+        total = nonmarket
+        for c in cons:
+            h = history.get(c.nse_symbol)
+            if h:
+                total += c.qty * h[-n + i]
+        series.append(total)
+    return series

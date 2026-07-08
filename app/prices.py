@@ -47,3 +47,38 @@ def fetch_quotes(nse_symbols: list[str], ttl: int = 300) -> dict[str, Quote]:
     if quotes:
         _cache[key] = (now, quotes)
     return quotes
+
+
+def _history_from_frame(df, symbols) -> dict:
+    out = {}
+    close = df["Close"] if "Close" in getattr(df.columns, "get_level_values", lambda _: [])(0) else df
+    for s in symbols:
+        col = f"{s}.NS"
+        if col in close.columns:
+            series = close[col].dropna().tolist()
+            if series:
+                out[s] = [float(x) for x in series]
+    return out
+
+
+_hist_cache: dict = {}
+
+
+def fetch_history(nse_symbols: list[str], period: str = "6mo", ttl: int = 3600) -> dict:
+    symbols = sorted(set(s for s in nse_symbols if s))
+    if not symbols:
+        return {}
+    key = (period, tuple(symbols))
+    now = time.time()
+    if key in _hist_cache and now - _hist_cache[key][0] < ttl:
+        return _hist_cache[key][1]
+    try:
+        import yfinance as yf
+        df = yf.download([f"{s}.NS" for s in symbols], period=period, interval="1d",
+                         progress=False, threads=True, group_by="column")
+        hist = _history_from_frame(df, symbols)
+    except Exception:
+        hist = {}
+    if hist:
+        _hist_cache[key] = (now, hist)
+    return hist

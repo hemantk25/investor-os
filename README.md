@@ -42,16 +42,16 @@ data-consistency checks pass.
   memory folder in Cowork (`investor-os-builder-prompt.md`). Output:
   his real one-pager + instructions.md + memory.md + financials/.
 - **Phase 3 (in progress, `phase3-dashboard` branch):** the real local-first
-  dashboard — Streamlit + yfinance, ICICI Excel ingestion, member switcher,
-  rebalance tracker, morning briefs via Claude Code. See
+  dashboard — Flask + Stitch-style Jinja/Tailwind UI, yfinance, ICICI Excel
+  ingestion, member switcher, rebalance tracker, morning briefs via Claude Code. See
   "Running the real dashboard" below.
 - **Phase 4:** Telegram bot (BotFather), scheduled 7 AM morning brief,
   price/news alerts, weekly newsletter.
 
 ## Running the real dashboard (Phase 3)
 
-The real dashboard lives in `app/` and runs locally — no server, no API keys,
-no cost beyond the owner's existing Claude subscription. Real financial data
+The real dashboard lives in `app/` and runs locally in Flask — no cloud server,
+no API keys, no cost beyond the owner's existing Claude subscription. Real financial data
 stays on the machine (the `data/`, `briefs/`, `profile/` folders are
 gitignored and never leave it).
 
@@ -66,7 +66,10 @@ gitignored and never leave it).
 1. Drop the weekly ICICI Direct holdings export into `data/holdings.xlsx`
    (and the advisory report into `data/advisory.xlsx`).
 2. macOS: double-click **Start Dashboard.command**. Windows: `./start-dashboard.ps1`.
-3. The browser opens at http://localhost:8501.
+3. The browser opens at http://127.0.0.1:8555.
+
+CSS is prebuilt and committed in `app/static/app.css`. Only rebuild it after
+changing Tailwind classes in templates.
 
 The one-page owner guide is `README-SIR.md`; the maintenance playbook for
 Claude Code is `CLAUDE.md`. Design and build detail:

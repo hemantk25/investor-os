@@ -3,7 +3,7 @@
 ## Every week (2 minutes)
 1. Log in to ICICI Direct → Portfolio → download the holdings Excel (all members).
 2. Drag the file into the `data` folder, replacing `holdings.xlsx`.
-3. Double-click **Start Dashboard** — your browser opens with everything updated.
+3. Double-click **Start Dashboard** — your browser opens at http://127.0.0.1:8555 with everything updated.
 
 ## Every morning (optional)
 Open the dashboard → **Morning Brief** → click **⚡ Generate Morning Brief**.

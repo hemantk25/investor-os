@@ -13,6 +13,10 @@ for changes, do them end-to-end and verify before reporting done.
 - `app/prices.py` fetches live prices from Yahoo Finance (`SYMBOL.NS`). On any
   failure the dashboard falls back to the CMP inside the Excel and shows "stale".
 - `app/portfolio.py` consolidates across members and computes all totals.
+- `app/server.py` is the Flask app. It renders Jinja templates in `app/templates/`
+  with the prebuilt Tailwind CSS file at `app/static/app.css`.
+- `app/view_models.py` and `app/charts.py` turn portfolio/advisory data into
+  template-ready dictionaries and inline SVG chart paths.
 - `data/advisory.xlsx` + `app/advisory.py` power the Rebalance view. Baseline
   quantities are frozen in `data/advisory-baseline.json` (delete it to re-baseline).
   Manual status overrides: `data/rebalance-status.json` e.g. {"Oravel Stays (OYO)": "DONE"}.
@@ -27,7 +31,12 @@ the dashboard (Start Dashboard.command).
 
 ## Maintenance playbook — likely requests and what to do
 - "Dashboard won't start" → run `./setup.sh`, then `Start Dashboard.command`;
-  check Python 3.11+ exists (`python3 --version`).
+  check Python 3.11+ exists (`python3 --version`). The app serves at
+  `http://127.0.0.1:8555`.
+- "Change how a page looks" → edit the matching template in `app/templates/`.
+  If you changed Tailwind classes, rebuild CSS with:
+  `npx tailwindcss@3 -c app/tailwind/tailwind.config.js -i app/tailwind/input.css -o app/static/app.css --minify`.
+  Text, copy, and Python logic changes usually need no CSS rebuild.
 - "A stock shows stale price" → its ISIN is missing from the NSE map. Add a line
   to `data/overrides.csv`. Unlisted holdings (pre-IPO etc.) stay stale by design.
 - "Only some holdings show up / totals look low" → the member sheets in the Excel

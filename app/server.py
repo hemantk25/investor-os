@@ -1,7 +1,7 @@
 from __future__ import annotations
 import os
 from pathlib import Path
-from flask import Flask, Response, redirect, render_template, request, url_for
+from flask import Flask, Response, redirect, render_template, render_template_string, request, url_for
 
 from app import parser, mapping, prices, advisory
 from app import portfolio as pmod
@@ -248,6 +248,37 @@ def create_app() -> Flask:
             return redirect(url_for("brief"))
         except bmod.BriefError as e:
             return redirect(url_for("brief", error=e.message))
+
+    @app.route("/news")
+    def news_page():
+        member = _member_arg()
+        ctx = vm.news_ctx(DATA, request.args.get("market"), request.args.get("mine") == "1")
+        pf = load_portfolio()
+        ctx.update(vm.common(pf, "news", member) if pf else _empty("news", "News"))
+        ctx["page"] = "News"; ctx["empty"] = False
+        return render_template("news.html", **ctx)
+
+    @app.route("/news/refresh", methods=["POST"])
+    def news_refresh():
+        from app import news as nmod
+        nmod.fetch_all(DATA, load_portfolio())
+        return redirect(url_for("news_page"))
+
+    @app.route("/goal")
+    def goal_page():
+        pf = load_portfolio()
+        member = _member_arg()
+        ctx = vm.common(pf, "goal", member) if pf else _empty("goal", "Goal")
+        ctx["page"] = "Goal"; ctx["empty"] = False
+        return render_template_string(
+            """{% extends "base.html" %}
+{% block content %}
+<div class="bg-surface rounded-xl p-8 shadow-card border border-[#E6E9F0]">
+  <p class="font-body-md text-body-md text-on-surface-variant">Goal tracker coming soon</p>
+</div>
+{% endblock %}""",
+            **ctx,
+        )
 
     @app.route("/profile")
     def profile():

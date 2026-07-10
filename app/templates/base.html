@@ -19,9 +19,10 @@
       ('overview', '/', 'dashboard', 'Overview'),
       ('holdings', '/holdings', 'wallet', 'Holdings'),
       ('watchlist', '/watchlist', 'bell', 'Watchlist'),
-      ('rebalance', '/rebalance', 'rebalance', 'Rebalance'),
       ('brief', '/brief', 'news', 'Morning Brief'),
-      ('profile', '/profile', 'person', 'Investor Profile'),
+      ('news', '/news', 'globe', 'News'),
+      ('rebalance', '/rebalance', 'rebalance', 'Rebalance'),
+      ('goal', '/goal', 'target', 'Goal'),
     ] %}
     {% for key, href, ic, label in nav_items %}
     <a href="{{ href }}" class="flex items-center gap-3 px-4 py-3 rounded-lg font-body-md text-body-md cursor-pointer active:scale-95 transition-all {% if key == active %}bg-secondary-container text-primary font-medium{% else %}text-on-surface-variant hover:text-primary hover:bg-surface-container-highest transition-colors duration-200{% endif %}">

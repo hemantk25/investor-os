@@ -48,3 +48,44 @@ def test_holdings_groups_and_search():
     h = vm.holdings(_pf(), None, "delta")
     names = [r["name"] for g in h["groups"] for r in g["rows"]]
     assert any("Delta" in n for n in names) and not any("Alpha" in n for n in names)
+
+
+def test_news_ctx_empty_defaults(tmp_path):
+    from app import news
+    ctx = vm.news_ctx(tmp_path, None, False)
+    assert ctx["items"] == []
+    assert ctx["market"] == "All"
+    assert ctx["mine"] is False
+    assert ctx["markets"] == ["All"] + news.MARKETS
+    assert ctx["fetched"] is None
+
+
+def test_news_ctx_items_have_ago_and_filters(tmp_path):
+    from app import news, storage
+    now = storage.now_iso()
+    with storage.connect(tmp_path) as con:
+        con.execute(
+            """
+            INSERT INTO news_items(url_hash, title, url, publisher, published_at, market,
+                                    isin, holding_name, fetched_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            ("h1", "Alpha rallies", "https://example.com/a1", "Mint", None, "India",
+             "INE001A01001", "Alpha Motors", now),
+        )
+        con.commit()
+
+    ctx = vm.news_ctx(tmp_path, "India", False)
+    assert ctx["market"] == "India"
+    assert len(ctx["items"]) == 1
+    item = ctx["items"][0]
+    assert item["title"] == "Alpha rallies"
+    assert item["url"] == "https://example.com/a1"
+    assert item["publisher"] == "Mint"
+    assert item["holding_name"] == "Alpha Motors"
+    assert "ago" in item["ago"]
+    assert ctx["fetched"] is not None
+
+    mine_ctx = vm.news_ctx(tmp_path, None, True)
+    assert len(mine_ctx["items"]) == 1
+    assert mine_ctx["market"] == "All"

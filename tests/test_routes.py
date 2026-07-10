@@ -176,3 +176,50 @@ def test_brief_and_profile(client):
 def test_brief_generate_redirects(client):
     r = client.post("/brief/generate")
     assert r.status_code in (302, 303)
+
+
+def test_news_page_lists_markets(client):
+    r = client.get("/news")
+    assert r.status_code == 200
+    for m in ("India", "US", "UAE", "Canada", "Global"):
+        assert m.encode() in r.data
+
+
+def test_news_page_market_filter(client):
+    r = client.get("/news?market=India")
+    assert r.status_code == 200
+
+
+def test_news_page_mine_filter(client):
+    r = client.get("/news?mine=1")
+    assert r.status_code == 200
+
+
+def test_news_refresh_redirects(client, monkeypatch):
+    import app.news as nmod
+    called = {}
+
+    def fake_fetch_all(data_dir, pf):
+        called["ok"] = True
+        return {"holdings": 0, "markets": 0}
+
+    monkeypatch.setattr(nmod, "fetch_all", fake_fetch_all)
+    r = client.post("/news/refresh")
+    assert r.status_code in (302, 303)
+    assert called.get("ok") is True
+
+
+def test_nav_order_news_between_brief_and_rebalance(client):
+    html = client.get("/").data.decode()
+    assert html.index("Morning Brief") < html.index(">News<") < html.index("Rebalance")
+
+
+def test_profile_removed_from_nav_but_route_still_works(client):
+    html = client.get("/").data.decode()
+    assert "Investor Profile" not in html
+    assert client.get("/profile").status_code == 200
+
+
+def test_goal_placeholder_route(client):
+    r = client.get("/goal")
+    assert r.status_code == 200

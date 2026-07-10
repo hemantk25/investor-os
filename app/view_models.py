@@ -1,4 +1,5 @@
 from __future__ import annotations
+from datetime import datetime
 from app import portfolio as pmod
 from app import charts
 
@@ -243,3 +244,38 @@ def profile_ctx(base_dir) -> dict:
                 "profile_html": md.markdown(p.read_text(encoding="utf-8"),
                                             extensions=["extra"])}
     return {"has_profile": False, "profile_html": ""}
+
+
+def _ago(item: dict) -> str:
+    ts = item.get("published_at") or item.get("fetched_at")
+    if not ts:
+        return ""
+    try:
+        dt = datetime.fromisoformat(ts)
+    except ValueError:
+        return ""
+    secs = max((datetime.now() - dt).total_seconds(), 0)
+    if secs < 3600:
+        return f"{max(int(secs // 60), 1)}m ago"
+    if secs < 86400:
+        return f"{int(secs // 3600)}h ago"
+    return f"{int(secs // 86400)}d ago"
+
+
+def news_ctx(data_dir, market: str | None, mine: bool) -> dict:
+    from app import news
+    chosen = market if market in news.MARKETS else "All"
+    load_market = chosen if chosen != "All" else None
+    raw_items = news.load_items(data_dir, market=load_market, mine=mine, limit=50)
+    items = [{"title": i["title"], "url": i["url"], "publisher": i.get("publisher") or "",
+             "ago": _ago(i), "holding_name": i.get("holding_name")}
+            for i in raw_items]
+    fetched_raw = news.last_fetched(data_dir)
+    fetched = None
+    if fetched_raw:
+        try:
+            fetched = f"{datetime.fromisoformat(fetched_raw):%d %b %Y %H:%M}"
+        except ValueError:
+            fetched = fetched_raw
+    return {"items": items, "market": chosen, "mine": mine,
+            "markets": ["All"] + news.MARKETS, "fetched": fetched}

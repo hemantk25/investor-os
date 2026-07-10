@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% block content %}
+<section class="flex flex-col gap-stack_lg">
+  <div class="bg-surface rounded-xl p-6 shadow-card border border-[#E6E9F0] flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <h2 class="font-h3 text-h3 text-on-surface">Markets &amp; Holdings News</h2>
+      <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+        {% if fetched %}Last fetched {{ fetched }}{% else %}No news fetched yet{% endif %}
+      </p>
+    </div>
+    <form method="post" action="/news/refresh">
+      <button type="submit" class="rounded-lg bg-on-surface px-4 py-2 text-sm font-medium text-white hover:bg-on-surface/90">Refresh news</button>
+    </form>
+  </div>
+
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div class="flex bg-surface-container-low rounded-lg p-1 flex-wrap">
+      {% for m in markets %}
+      <a href="/news?market={{ m }}{% if mine %}&mine=1{% endif %}" class="px-4 py-2 text-sm font-medium rounded-md transition-colors {% if market == m %}bg-white text-primary shadow-sm border border-[#E6E9F0]{% else %}text-on-surface-variant hover:text-primary{% endif %}">{{ m }}</a>
+      {% endfor %}
+    </div>
+    {% if mine %}
+    <a href="/news?market={{ market }}" class="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-1.5 text-sm font-medium text-white">Mentions your holdings &times;</a>
+    {% else %}
+    <a href="/news?market={{ market }}&mine=1" class="inline-flex items-center gap-2 rounded-full bg-white border border-[#E6E9F0] px-4 py-1.5 text-sm font-medium text-on-surface-variant hover:text-primary">Mentions your holdings</a>
+    {% endif %}
+  </div>
+
+  {% if items %}
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+    {% for item in items %}
+    <article class="bg-surface rounded-xl p-5 shadow-card border border-[#E6E9F0] flex flex-col gap-2">
+      <a href="{{ item.url }}" target="_blank" rel="noopener" class="font-body-md text-body-md font-medium text-on-surface hover:text-primary">{{ item.title }}</a>
+      <p class="font-body-sm text-body-sm text-on-surface-variant">{{ item.publisher or 'Unknown source' }} · {{ item.ago }}</p>
+      {% if item.holding_name %}
+      <span class="self-start rounded-full bg-secondary-container px-2.5 py-0.5 text-xs font-medium text-primary">{{ item.holding_name }}</span>
+      {% endif %}
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="flex-1 flex items-center justify-center py-24">
+    <div class="flex flex-col items-center justify-center text-center bg-surface rounded-xl p-12 shadow-card border border-[#E6E9F0] max-w-lg">
+      <div class="w-16 h-16 rounded-full bg-secondary-container flex items-center justify-center mb-4 text-primary">
+        {{ icon('globe') }}
+      </div>
+      <h2 class="font-h3 text-h3 text-on-surface mb-2">No news yet</h2>
+      <p class="font-body-md text-body-md text-on-surface-variant">No news stored yet — click Refresh news.</p>
+    </div>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

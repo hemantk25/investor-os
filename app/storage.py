@@ -100,6 +100,22 @@ def init_db(con: sqlite3.Connection) -> None:
           value TEXT NOT NULL,
           updated_at TEXT NOT NULL
         );
+
+        CREATE TABLE IF NOT EXISTS news_items (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          url_hash TEXT NOT NULL UNIQUE,
+          title TEXT NOT NULL, url TEXT NOT NULL,
+          publisher TEXT, published_at TEXT,
+          market TEXT NOT NULL,
+          isin TEXT,
+          holding_name TEXT,
+          fetched_at TEXT NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS security_meta (
+          symbol TEXT PRIMARY KEY,
+          market_cap REAL, sector TEXT, industry TEXT,
+          fetched_at TEXT NOT NULL
+        );
         """
     )
     con.commit()

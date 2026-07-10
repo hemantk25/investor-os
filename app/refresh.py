@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from app import holdings_ledger, mapping, parser, portfolio as pmod, prices, watchlist
+from app import goal, holdings_ledger, mapping, news, parser, portfolio as pmod, prices, watchlist
 
 
 BASE = Path(__file__).resolve().parent.parent
@@ -46,15 +46,30 @@ def run_refresh(data_dir: Path | None = None, pf=None) -> dict:
 
     pf = pf or load_portfolio_for_refresh(data_dir)
     snapshot_count = holdings_ledger.record_snapshot(data_dir, pf) if pf is not None else 0
+
+    try:
+        security_meta_count = goal.refresh_security_meta(data_dir, pf)
+    except Exception:
+        security_meta_count = 0
+
+    try:
+        news_result = news.fetch_all(data_dir, pf)
+        news_count = sum(news_result.values()) if isinstance(news_result, dict) else int(news_result or 0)
+    except Exception:
+        news_count = 0
+
     from app import storage
     storage.set_state(data_dir, "last_refresh", storage.now_iso())
-    return {"watchlist_quotes": quote_count, "portfolio_snapshots": snapshot_count}
+    return {"watchlist_quotes": quote_count, "portfolio_snapshots": snapshot_count,
+            "security_meta": security_meta_count, "news_items": news_count}
 
 
 def main() -> None:
     result = run_refresh()
-    print(f"Refreshed {result['watchlist_quotes']} watchlist quotes and "
-          f"{result['portfolio_snapshots']} portfolio snapshots.")
+    print(f"Refreshed {result['watchlist_quotes']} watchlist quotes, "
+          f"{result['portfolio_snapshots']} portfolio snapshots, "
+          f"{result['security_meta']} security meta rows, and "
+          f"{result['news_items']} news items.")
 
 
 if __name__ == "__main__":

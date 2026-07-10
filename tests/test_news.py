@@ -208,3 +208,20 @@ def test_prune_caps_at_500(tmp_path):
     with storage.connect(tmp_path) as con:
         count_after = con.execute("SELECT COUNT(*) AS c FROM news_items").fetchone()["c"]
     assert count_after == 500
+
+
+def test_unsafe_url_schemes_rejected(tmp_path):
+    import feedparser
+    from app.news import normalize_entries, save_items, load_items
+    rss = """<?xml version="1.0"?><rss version="2.0"><channel><title>t</title>
+<item><title>Evil</title><link>javascript:alert(1)</link></item>
+<item><title>Fine</title><link>https://example.com/ok</link></item>
+</channel></rss>"""
+    items = normalize_entries(feedparser.parse(rss), "India", None, None)
+    assert [i["title"] for i in items] == ["Fine"]
+    # belt-and-braces: save_items also refuses non-http(s) urls
+    n = save_items(tmp_path, [{"title": "Sneaky", "url": "data:text/html,x", "market": "India",
+                               "publisher": None, "published_at": None,
+                               "isin": None, "holding_name": None}])
+    assert n == 0
+    assert load_items(tmp_path) == []

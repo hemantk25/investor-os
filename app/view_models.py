@@ -1,7 +1,12 @@
 from __future__ import annotations
-from datetime import datetime
+from datetime import datetime, timezone
 from app import portfolio as pmod
 from app import charts
+
+
+def _utcnow_naive() -> datetime:
+    # naive UTC "now" for comparing feed timestamps (datetime.utcnow is deprecated)
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 RANGE_TO_PERIOD = {"1M": "1mo", "3M": "3mo", "6M": "6mo", "1Y": "1y", "ALL": "5y"}
 _GROUPS = [("equity", "Direct Equity", "NSE"), ("mf", "Mutual Funds", ""),
@@ -272,7 +277,7 @@ def _ago(item: dict) -> str:
     # published_at comes from feedparser (UTC), fetched_at from storage.now_iso() (local)
     # Use matching clock base for each timestamp source
     if published_at:
-        secs = max((datetime.utcnow() - dt).total_seconds(), 0)
+        secs = max((_utcnow_naive() - dt).total_seconds(), 0)
     else:
         secs = max((datetime.now() - dt).total_seconds(), 0)
     if secs < 3600:

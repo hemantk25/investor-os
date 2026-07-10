@@ -4,7 +4,7 @@ import hashlib
 import socket
 from datetime import datetime, timedelta
 from pathlib import Path
-from urllib.parse import quote_plus
+from urllib.parse import quote_plus, urlparse
 
 import feedparser
 
@@ -44,13 +44,21 @@ def _url_hash(url: str) -> str:
     return hashlib.sha1(url.encode()).hexdigest()
 
 
+def _safe_url(url: str) -> bool:
+    # Feed data is untrusted input; only plain web links may reach an href.
+    try:
+        return urlparse(url).scheme in ("http", "https")
+    except ValueError:
+        return False
+
+
 def normalize_entries(parsed, market: str, isin: str | None, holding_name: str | None) -> list[dict]:
     cap = HOLDING_FEED_CAP if (isin or holding_name) else MARKET_FEED_CAP
     out = []
     for entry in getattr(parsed, "entries", [])[:cap]:
         title = entry.get("title") or ""
         url = entry.get("link") or ""
-        if not title or not url:
+        if not title or not url or not _safe_url(url):
             continue
         source = entry.get("source") or {}
         publisher = source.get("title") if isinstance(source, dict) else None
@@ -76,7 +84,7 @@ def save_items(data_dir: Path, items: list[dict]) -> int:
     with storage.connect(data_dir) as con:
         for item in items:
             url = item.get("url") or ""
-            if not url:
+            if not url or not _safe_url(url):
                 continue
             cur = con.execute(
                 """

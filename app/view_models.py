@@ -247,14 +247,21 @@ def profile_ctx(base_dir) -> dict:
 
 
 def _ago(item: dict) -> str:
-    ts = item.get("published_at") or item.get("fetched_at")
+    published_at = item.get("published_at")
+    fetched_at = item.get("fetched_at")
+    ts = published_at or fetched_at
     if not ts:
         return ""
     try:
         dt = datetime.fromisoformat(ts)
     except ValueError:
         return ""
-    secs = max((datetime.now() - dt).total_seconds(), 0)
+    # published_at comes from feedparser (UTC), fetched_at from storage.now_iso() (local)
+    # Use matching clock base for each timestamp source
+    if published_at:
+        secs = max((datetime.utcnow() - dt).total_seconds(), 0)
+    else:
+        secs = max((datetime.now() - dt).total_seconds(), 0)
     if secs < 3600:
         return f"{max(int(secs // 60), 1)}m ago"
     if secs < 86400:

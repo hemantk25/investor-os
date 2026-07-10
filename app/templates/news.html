@@ -17,13 +17,13 @@
   <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
     <div class="flex bg-surface-container-low rounded-lg p-1 flex-wrap">
       {% for m in markets %}
-      <a href="/news?market={{ m }}{% if mine %}&mine=1{% endif %}" class="px-4 py-2 text-sm font-medium rounded-md transition-colors {% if market == m %}bg-white text-primary shadow-sm border border-[#E6E9F0]{% else %}text-on-surface-variant hover:text-primary{% endif %}">{{ m }}</a>
+      <a href="/news?market={{ m }}{% if mine %}&mine=1{% endif %}{% if member %}&member={{ member }}{% endif %}" class="px-4 py-2 text-sm font-medium rounded-md transition-colors {% if market == m %}bg-white text-primary shadow-sm border border-[#E6E9F0]{% else %}text-on-surface-variant hover:text-primary{% endif %}">{{ m }}</a>
       {% endfor %}
     </div>
     {% if mine %}
-    <a href="/news?market={{ market }}" class="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-1.5 text-sm font-medium text-white">Mentions your holdings &times;</a>
+    <a href="/news?market={{ market }}{% if member %}&member={{ member }}{% endif %}" class="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-1.5 text-sm font-medium text-white">Mentions your holdings &times;</a>
     {% else %}
-    <a href="/news?market={{ market }}&mine=1" class="inline-flex items-center gap-2 rounded-full bg-white border border-[#E6E9F0] px-4 py-1.5 text-sm font-medium text-on-surface-variant hover:text-primary">Mentions your holdings</a>
+    <a href="/news?market={{ market }}&mine=1{% if member %}&member={{ member }}{% endif %}" class="inline-flex items-center gap-2 rounded-full bg-white border border-[#E6E9F0] px-4 py-1.5 text-sm font-medium text-on-surface-variant hover:text-primary">Mentions your holdings</a>
     {% endif %}
   </div>
 

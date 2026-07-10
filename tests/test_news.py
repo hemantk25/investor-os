@@ -149,3 +149,62 @@ def test_last_fetched_returns_latest(tmp_path):
     items = news.normalize_entries(parsed, market="India", isin=None, holding_name=None)
     news.save_items(tmp_path, items)
     assert news.last_fetched(tmp_path) is not None
+
+
+def test_normalize_caps_items():
+    """Test that normalize_entries respects market (25) and holding (10) caps."""
+    items_xml = ""
+    for i in range(30):
+        items_xml += f'<item><title>Item {i}</title><link>https://example.com/x{i}</link></item>'
+
+    rss = f"""<?xml version="1.0"?><rss version="2.0"><channel><title>t</title>
+{items_xml}
+</channel></rss>"""
+
+    parsed = feedparser.parse(rss)
+
+    # Without isin/holding_name: cap is MARKET_FEED_CAP (25)
+    items = news.normalize_entries(parsed, "India", None, None)
+    assert len(items) == 25
+
+    # With isin: cap is HOLDING_FEED_CAP (10)
+    items_with_isin = news.normalize_entries(parsed, "India", "INEX", None)
+    assert len(items_with_isin) == 10
+
+    # With holding_name: cap is HOLDING_FEED_CAP (10)
+    items_with_name = news.normalize_entries(parsed, "India", None, "TestHolding")
+    assert len(items_with_name) == 10
+
+
+def test_prune_caps_at_500(tmp_path):
+    """Test that prune keeps exactly 500 rows when inserted count exceeds PRUNE_KEEP."""
+    fresh_time = storage.now_iso()
+    rows = []
+    for i in range(510):
+        rows.append((f"h{i}", f"Item {i}", f"https://example.com/x{i}", None, None,
+                     "India", None, None, fresh_time))
+
+    with storage.connect(tmp_path) as con:
+        con.executemany(
+            """
+            INSERT INTO news_items(url_hash, title, url, publisher, published_at, market,
+                                    isin, holding_name, fetched_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            rows,
+        )
+        con.commit()
+
+    # Verify insertion
+    with storage.connect(tmp_path) as con:
+        count_before = con.execute("SELECT COUNT(*) AS c FROM news_items").fetchone()["c"]
+    assert count_before == 510
+
+    # Prune should delete 10 rows
+    deleted = news.prune(tmp_path)
+    assert deleted == 10
+
+    # Verify exactly 500 remain
+    with storage.connect(tmp_path) as con:
+        count_after = con.execute("SELECT COUNT(*) AS c FROM news_items").fetchone()["c"]
+    assert count_after == 500

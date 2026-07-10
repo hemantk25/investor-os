@@ -157,7 +157,10 @@ def fetch_all(data_dir: Path, pf) -> dict:
             holding_count += _fetch_holding_feed(data_dir, "India", isin, name)
             holding_count += _fetch_yfinance_news(data_dir, "India", isin, name, symbol)
 
-    prune(data_dir)
+    try:
+        prune(data_dir)
+    except Exception:
+        pass
     return {"holdings": holding_count, "markets": market_count}
 
 

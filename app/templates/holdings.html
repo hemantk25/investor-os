@@ -8,91 +8,139 @@
       {{ icon('download') }}
     </div>
     <h2 class="font-h3 text-h3 text-on-surface mb-2">No holdings yet</h2>
-    <p class="font-body-md text-body-md text-on-surface-variant">Drop the ICICI export into <code class="px-1.5 py-0.5 rounded bg-surface-container-low text-primary font-medium">data/holdings.xlsx</code> and refresh this page.</p>
+    <p class="font-body-md text-body-md text-on-surface-variant">Drop the ICICI export into <code class="px-1.5 py-0.5 rounded bg-surface-container-low text-primary font-medium">data/holdings.xlsx</code>, or add a manual holding below after refresh.</p>
   </div>
 </div>
 {% else %}
-<section class="bg-surface rounded-xl shadow-card border border-[#E6E9F0] overflow-hidden">
-  <div class="p-6 border-b border-[#E6E9F0] flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-    <div>
-      <h2 class="font-h3 text-h3 text-on-surface">Portfolio Holdings</h2>
-      <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Grouped by asset class from your ICICI export and extras file.</p>
+<section class="grid grid-cols-1 xl:grid-cols-3 gap-gutter">
+  <div class="xl:col-span-2 flex flex-col gap-gutter">
+    <div class="bg-surface rounded-xl shadow-card border border-[#E6E9F0] overflow-hidden">
+      <div class="p-6 border-b border-[#E6E9F0] flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h2 class="font-h3 text-h3 text-on-surface">Portfolio Holdings</h2>
+          <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">{{ holdings_count }} tracked positions · {{ holdings_total }}</p>
+        </div>
+        <form method="get" action="/holdings" class="relative w-full md:w-[360px]">
+          {% if member %}<input type="hidden" name="member" value="{{ member }}">{% endif %}
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">{{ icon('search') }}</span>
+          <input name="q" value="{{ q }}" placeholder="Search holdings..." class="w-full rounded-lg border border-[#E6E9F0] bg-white py-2.5 pl-11 pr-4 font-body-sm text-body-sm text-on-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/10">
+        </form>
+      </div>
+
+      <div class="divide-y divide-[#E6E9F0]">
+        {% for row in rows %}
+        <div class="p-5 hover:bg-surface-container-low/50 transition-colors">
+          <div class="grid grid-cols-1 lg:grid-cols-[1.4fr_0.8fr_0.8fr_0.8fr_1fr] gap-4 lg:items-center">
+            <div class="min-w-0">
+              <div class="flex flex-wrap items-center gap-2">
+                <h3 class="font-body-md text-body-md font-semibold text-on-surface truncate">{{ row.name }}</h3>
+                <span class="rounded-full bg-secondary-container px-2 py-0.5 text-xs font-medium text-primary">{{ row.source }}</span>
+                {% if not row.live %}<span class="rounded-full bg-surface-container-low px-2 py-0.5 text-xs text-outline">stale price</span>{% endif %}
+              </div>
+              <div class="mt-1 flex flex-wrap gap-2 text-xs text-on-surface-variant">
+                <span>{{ row.nse or row.isin }}</span>
+                <span>&middot;</span>
+                <span>{% for h in row.held_by %}{{ h }}{% if not loop.last %}, {% endif %}{% endfor %}</span>
+              </div>
+            </div>
+            <div>
+              <div class="text-xs text-on-surface-variant">Value</div>
+              <div class="font-number-display text-number-display text-on-surface">{{ row.value }}</div>
+            </div>
+            <div>
+              <div class="text-xs text-on-surface-variant">Qty / Avg</div>
+              <div class="font-number-display text-sm text-on-surface">{{ '%.2f'|format(row.qty) }}</div>
+              <div class="font-number-display text-xs text-on-surface-variant">{% if row.avg is not none %}&#8377;{{ '%.2f'|format(row.avg) }}{% else %}cost missing{% endif %}</div>
+            </div>
+            <div>
+              <div class="text-xs text-on-surface-variant">Day / Return</div>
+              <div class="font-number-display text-sm {% if row.day_known and row.day_up %}text-status-success{% elif row.day_known %}text-status-error{% else %}text-outline{% endif %}">{{ row.day }}</div>
+              <div class="font-number-display text-xs {% if row.pl_known and row.pl_up %}text-status-success{% elif row.pl_known %}text-status-error{% else %}text-outline{% endif %}">{{ row.pl }}</div>
+            </div>
+            <form method="post" action="/holdings/events/sell" class="grid grid-cols-2 gap-2">
+              <input type="hidden" name="isin" value="{{ row.isin }}">
+              <input type="hidden" name="name" value="{{ row.name }}">
+              <input type="hidden" name="symbol" value="{{ row.nse }}">
+              {% if member %}
+              <input type="hidden" name="member" value="{{ member }}">
+              {% else %}
+              <select name="member" class="col-span-2 rounded-lg border border-[#E6E9F0] bg-white px-2 py-2 text-xs outline-none focus:border-primary">
+                {% for h in row.held_by %}
+                <option value="{{ h }}">{{ h }}</option>
+                {% endfor %}
+              </select>
+              {% endif %}
+              <input name="qty" type="number" min="0.0001" step="0.0001" placeholder="Sell qty" class="rounded-lg border border-[#E6E9F0] bg-white px-2 py-2 text-xs outline-none focus:border-primary">
+              <button type="submit" class="rounded-lg border border-status-error/30 px-3 py-2 text-xs font-medium text-status-error hover:bg-status-error/5">Reduce</button>
+            </form>
+          </div>
+        </div>
+        {% else %}
+        <div class="p-12 text-center">
+          <h3 class="font-h3 text-h3 text-on-surface">No matching holdings</h3>
+          <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Clear the search filter to see the full portfolio.</p>
+        </div>
+        {% endfor %}
+      </div>
     </div>
-    <form method="get" action="/holdings" class="relative w-full md:w-[360px]">
-      {% if member %}<input type="hidden" name="member" value="{{ member }}">{% endif %}
-      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">{{ icon('search') }}</span>
-      <input name="q" value="{{ q }}" placeholder="Filter by name or symbol..." class="w-full rounded-lg border border-[#E6E9F0] bg-white py-2.5 pl-11 pr-4 font-body-sm text-body-sm text-on-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/10">
-    </form>
   </div>
 
-  {% if groups %}
-  <div class="overflow-x-auto">
-    <table class="w-full border-collapse">
-      <thead class="bg-surface-container-low text-left">
-        <tr class="font-label-caps text-label-caps text-on-surface-variant uppercase">
-          <th class="px-6 py-3 font-medium">Stock</th>
-          <th class="px-4 py-3 font-medium">NSE</th>
-          <th class="px-4 py-3 font-medium text-right">Qty</th>
-          <th class="px-4 py-3 font-medium text-right">Avg Cost</th>
-          <th class="px-4 py-3 font-medium text-right">Price</th>
-          <th class="px-4 py-3 font-medium text-right">Value</th>
-          <th class="px-4 py-3 font-medium text-right">P/L %</th>
-          <th class="px-4 py-3 font-medium text-right">Day %</th>
-          <th class="px-6 py-3 font-medium">Held By</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for g in groups %}
-        <tr class="bg-background">
-          <td colspan="9" class="px-6 py-3 border-y border-[#E6E9F0]">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2">
-                <span class="font-h3 text-h3 text-primary">{{ g.title }}</span>
-                {% if g.tag %}<span class="rounded-full bg-secondary-container px-2 py-0.5 text-xs font-medium text-primary">{{ g.tag }}</span>{% endif %}
-              </div>
-              <span class="font-number-display text-number-display text-on-surface">{{ g.subtotal }}</span>
+  <aside class="flex flex-col gap-gutter">
+    <form method="post" action="/holdings/manual" class="bg-surface rounded-xl shadow-card border border-[#E6E9F0] p-6 flex flex-col gap-3">
+      <div>
+        <h2 class="font-h3 text-h3 text-on-surface">Add Holding</h2>
+        <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Layer a manual holding on top of the ICICI Excel base.</p>
+      </div>
+      <input name="name" required placeholder="Stock name" class="rounded-lg border border-[#E6E9F0] bg-white px-3 py-2.5 font-body-sm text-body-sm outline-none focus:border-primary">
+      <input name="isin" required placeholder="ISIN" class="rounded-lg border border-[#E6E9F0] bg-white px-3 py-2.5 font-body-sm text-body-sm outline-none focus:border-primary">
+      <input name="symbol" placeholder="NSE symbol" class="rounded-lg border border-[#E6E9F0] bg-white px-3 py-2.5 font-body-sm text-body-sm outline-none focus:border-primary">
+      <div class="grid grid-cols-2 gap-3">
+        <input name="qty" required type="number" min="0.0001" step="0.0001" placeholder="Qty" class="rounded-lg border border-[#E6E9F0] bg-white px-3 py-2.5 font-body-sm text-body-sm outline-none focus:border-primary">
+        <input name="avg_cost" type="number" min="0" step="0.01" placeholder="Avg cost" class="rounded-lg border border-[#E6E9F0] bg-white px-3 py-2.5 font-body-sm text-body-sm outline-none focus:border-primary">
+      </div>
+      <input name="price" type="number" min="0" step="0.01" placeholder="Fallback current price" class="rounded-lg border border-[#E6E9F0] bg-white px-3 py-2.5 font-body-sm text-body-sm outline-none focus:border-primary">
+      <select name="member" class="rounded-lg border border-[#E6E9F0] bg-white px-3 py-2.5 font-body-sm text-body-sm outline-none focus:border-primary">
+        {% for m in members %}
+        <option value="{{ m }}" {% if member == m %}selected{% endif %}>{{ m }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-primary/90">Add Holding</button>
+    </form>
+
+    <div class="bg-surface rounded-xl shadow-card border border-[#E6E9F0] p-6">
+      <h2 class="font-h3 text-h3 text-on-surface">Manual Holdings</h2>
+      <div class="mt-4 flex flex-col gap-3">
+        {% for item in manual_items %}
+        <details class="rounded-lg border border-[#E6E9F0] bg-surface-container-low/60 p-3">
+          <summary class="cursor-pointer font-body-sm text-body-sm font-medium text-on-surface">{{ item.name }} · {{ item.member }}</summary>
+          <form method="post" action="/holdings/manual/{{ item.id }}/edit" class="mt-3 flex flex-col gap-2">
+            <input name="name" value="{{ item.name }}" class="rounded border border-[#E6E9F0] bg-white px-2 py-1.5 text-sm">
+            <input name="isin" value="{{ item.isin }}" class="rounded border border-[#E6E9F0] bg-white px-2 py-1.5 text-sm">
+            <input name="symbol" value="{{ item.symbol or '' }}" class="rounded border border-[#E6E9F0] bg-white px-2 py-1.5 text-sm">
+            <div class="grid grid-cols-2 gap-2">
+              <input name="qty" type="number" step="0.0001" value="{{ item.qty }}" class="rounded border border-[#E6E9F0] bg-white px-2 py-1.5 text-sm">
+              <input name="avg_cost" type="number" step="0.01" value="{{ item.avg_cost or '' }}" class="rounded border border-[#E6E9F0] bg-white px-2 py-1.5 text-sm">
             </div>
-          </td>
-        </tr>
-        {% for r in g.rows %}
-        <tr class="table-row-hover border-b border-[#E6E9F0]">
-          <td class="px-6 py-4">
-            <div class="flex flex-col">
-              <span class="font-body-sm text-body-sm font-medium text-on-surface">{{ r.name }}</span>
-              <div class="mt-1 flex flex-wrap gap-1">
-                {% if not r.live %}<span class="rounded-full bg-surface-container-low px-2 py-0.5 text-xs text-outline">stale price</span>{% endif %}
-                {% if not r.pl_known %}<span class="rounded-full bg-surface-container-low px-2 py-0.5 text-xs text-outline">cost missing</span>{% endif %}
-                {% if r.is_extra %}<span class="rounded-full bg-secondary-container px-2 py-0.5 text-xs text-primary">manual asset</span>{% endif %}
-                {% if r.note %}<span class="text-xs text-on-surface-variant">{{ r.note }}</span>{% endif %}
-              </div>
-            </div>
-          </td>
-          <td class="px-4 py-4 font-body-sm text-body-sm text-on-surface-variant">{{ r.nse }}</td>
-          <td class="px-4 py-4 text-right font-number-display text-sm text-on-surface">{% if r.qty is not none %}{{ '%.2f'|format(r.qty) }}{% else %}&mdash;{% endif %}</td>
-          <td class="px-4 py-4 text-right font-number-display text-sm text-on-surface-variant">{% if r.avg is not none %}&#8377;{{ '%.2f'|format(r.avg) }}{% else %}&mdash;{% endif %}</td>
-          <td class="px-4 py-4 text-right font-number-display text-sm text-on-surface-variant">{% if r.price is not none %}&#8377;{{ '%.2f'|format(r.price) }}{% else %}&mdash;{% endif %}</td>
-          <td class="px-4 py-4 text-right font-number-display text-sm font-medium text-on-surface">{{ r.value }}</td>
-          <td class="px-4 py-4 text-right font-number-display text-sm {% if r.pl_known and r.pl_up %}text-status-success{% elif r.pl_known %}text-status-error{% else %}text-outline{% endif %}">{{ r.pl }}</td>
-          <td class="px-4 py-4 text-right font-number-display text-sm {% if r.day_known and r.day_up %}text-status-success{% elif r.day_known %}text-status-error{% else %}text-outline{% endif %}">{{ r.day }}</td>
-          <td class="px-6 py-4">
-            <div class="flex flex-wrap gap-1">
-              {% for h in r.held_by %}
-              <span class="rounded-full bg-surface-container-low px-2 py-0.5 text-xs font-medium text-primary">{{ h }}</span>
+            <input name="price" type="number" step="0.01" value="{{ item.price or '' }}" class="rounded border border-[#E6E9F0] bg-white px-2 py-1.5 text-sm">
+            <select name="member" class="rounded border border-[#E6E9F0] bg-white px-2 py-1.5 text-sm">
+              {% for m in members %}
+              <option value="{{ m }}" {% if item.member == m %}selected{% endif %}>{{ m }}</option>
               {% endfor %}
+            </select>
+            <div class="flex gap-2">
+              <button type="submit" class="flex-1 rounded bg-primary px-3 py-2 text-xs font-medium text-white">Save</button>
             </div>
-          </td>
-        </tr>
+          </form>
+          <form method="post" action="/holdings/manual/{{ item.id }}/delete" class="mt-2">
+            <button type="submit" class="w-full rounded border border-status-error/30 px-3 py-2 text-xs font-medium text-status-error">Remove manual row</button>
+          </form>
+        </details>
+        {% else %}
+        <p class="font-body-sm text-body-sm text-on-surface-variant">No dashboard-added holdings yet.</p>
         {% endfor %}
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-  {% else %}
-  <div class="p-12 text-center">
-    <h3 class="font-h3 text-h3 text-on-surface">No matching holdings</h3>
-    <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Clear the search filter to see the full portfolio.</p>
-  </div>
-  {% endif %}
+      </div>
+    </div>
+  </aside>
 </section>
 {% endif %}
 {% endblock %}

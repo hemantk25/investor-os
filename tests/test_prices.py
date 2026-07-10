@@ -1,6 +1,6 @@
 import pandas as pd
 
-from app.prices import _frame_to_quotes
+from app.prices import _frame_to_quotes, _generic_frame_to_quotes
 
 
 def test_frame_to_quotes_two_days():
@@ -20,3 +20,12 @@ def test_history_from_frame():
     df.columns = pd.MultiIndex.from_tuples(df.columns)
     h = _history_from_frame(df, ["ALPHAMOT"])
     assert h["ALPHAMOT"] == [10.0, 11.0, 12.0]
+
+
+def test_generic_frame_to_quotes():
+    df = pd.DataFrame({("Close", "^NSEI"): [100.0, 105.0],
+                       ("Close", "INR=X"): [83.0, 83.5]})
+    df.columns = pd.MultiIndex.from_tuples(df.columns)
+    q = _generic_frame_to_quotes(df, ["^NSEI", "INR=X"])
+    assert q["^NSEI"].price == 105.0
+    assert round(q["INR=X"].day_pct, 2) == 0.6

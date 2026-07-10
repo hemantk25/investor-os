@@ -29,6 +29,49 @@ def _frame_to_quotes(df, symbols) -> dict[str, Quote]:
     return out
 
 
+def _series_from_frame(df, symbol: str):
+    if df is None or getattr(df, "empty", True):
+        return None
+    columns = getattr(df, "columns", None)
+    if columns is None:
+        return None
+    try:
+        levels = columns.nlevels
+    except Exception:
+        levels = 1
+    if levels > 1:
+        try:
+            if "Close" in columns.get_level_values(0):
+                close = df["Close"]
+                if symbol in close.columns:
+                    return close[symbol].dropna()
+        except Exception:
+            pass
+        try:
+            if symbol in columns.get_level_values(0) and "Close" in df[symbol].columns:
+                return df[symbol]["Close"].dropna()
+        except Exception:
+            pass
+        return None
+    if "Close" in columns:
+        return df["Close"].dropna()
+    if symbol in columns:
+        return df[symbol].dropna()
+    return None
+
+
+def _generic_frame_to_quotes(df, symbols) -> dict[str, Quote]:
+    out = {}
+    for symbol in symbols:
+        series = _series_from_frame(df, symbol)
+        if series is None or series.empty:
+            continue
+        price = float(series.iloc[-1])
+        day = float((series.iloc[-1] / series.iloc[-2] - 1) * 100) if len(series) >= 2 else None
+        out[symbol] = Quote(price=price, day_pct=day)
+    return out
+
+
 def fetch_quotes(nse_symbols: list[str], ttl: int = 300) -> dict[str, Quote]:
     symbols = sorted(set(s for s in nse_symbols if s))
     if not symbols:
@@ -42,6 +85,26 @@ def fetch_quotes(nse_symbols: list[str], ttl: int = 300) -> dict[str, Quote]:
         df = yf.download([f"{s}.NS" for s in symbols], period="5d", interval="1d",
                          progress=False, threads=True, group_by="column")
         quotes = _frame_to_quotes(df, symbols)
+    except Exception:
+        quotes = {}
+    if quotes:
+        _cache[key] = (now, quotes)
+    return quotes
+
+
+def fetch_market_quotes(symbols: list[str], ttl: int = 300) -> dict[str, Quote]:
+    symbols = sorted(set(s for s in symbols if s))
+    if not symbols:
+        return {}
+    key = ("market", tuple(symbols))
+    now = time.time()
+    if key in _cache and now - _cache[key][0] < ttl:
+        return _cache[key][1]
+    try:
+        import yfinance as yf
+        df = yf.download(symbols, period="5d", interval="1d", progress=False,
+                         threads=True, group_by="column")
+        quotes = _generic_frame_to_quotes(df, symbols)
     except Exception:
         quotes = {}
     if quotes:

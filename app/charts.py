@@ -34,6 +34,31 @@ def alloc_segments(totals) -> list[dict]:
     return out
 
 
+def donut_chart(entries: list[dict]) -> dict:
+    values = [e for e in entries if e.get("value", 0) > 0]
+    total = sum(e["value"] for e in values)
+    if not total:
+        return {"segments": [], "gradient": "#e0e3e1", "total": fmt_short(0)}
+    start = 0.0
+    stops = []
+    segments = []
+    for idx, entry in enumerate(values):
+        color = entry.get("color") or CHART_COLORS[idx % len(CHART_COLORS)]
+        pct = entry["value"] / total * 100
+        end = start + entry["value"] / total * 360
+        stops.append(f"{color} {start:.2f}deg {end:.2f}deg")
+        segments.append({
+            "label": entry["label"],
+            "value": entry["value"],
+            "short": fmt_short(entry["value"]),
+            "pct": pct,
+            "color": color,
+        })
+        start = end
+    return {"segments": segments, "gradient": "conic-gradient(" + ", ".join(stops) + ")",
+            "total": fmt_short(total)}
+
+
 def portfolio_series(pf, member, history) -> list:
     if not history:
         return []

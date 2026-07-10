@@ -1,4 +1,4 @@
-from app.charts import area_path, alloc_segments, CHART_COLORS
+from app.charts import area_path, alloc_segments, CHART_COLORS, donut_chart
 from app.parser import parse_holdings
 from app.prices import Quote
 from app.portfolio import build_portfolio
@@ -30,6 +30,14 @@ def test_alloc_segments_order_and_pct():
     assert all(0 <= s["pct"] <= 100 for s in segs)
     assert segs[0]["color"] == CHART_COLORS[0]
     assert abs(sum(s["pct"] for s in segs) - 100) < 0.5
+
+
+def test_donut_chart_builds_gradient():
+    chart = donut_chart([{"label": "Equity", "value": 75.0, "color": "#111111"},
+                         {"label": "Cash", "value": 25.0, "color": "#222222"}])
+    assert chart["gradient"].startswith("conic-gradient(")
+    assert [s["label"] for s in chart["segments"]] == ["Equity", "Cash"]
+    assert round(sum(s["pct"] for s in chart["segments"])) == 100
 
 
 def test_portfolio_series_reconstructs():

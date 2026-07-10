@@ -5,6 +5,19 @@ from app import charts
 RANGE_TO_PERIOD = {"1M": "1mo", "3M": "3mo", "6M": "6mo", "1Y": "1y", "ALL": "5y"}
 _GROUPS = [("equity", "Direct Equity", "NSE"), ("mf", "Mutual Funds", ""),
            ("gold", "Gold", ""), ("debt", "Debt & FD", ""), ("cash", "Cash", "")]
+MARKET_METRICS = [
+    {"label": "Nifty 50", "symbol": "^NSEI", "market": "India", "fmt": "index"},
+    {"label": "Nifty Smallcap", "symbol": "^CNXSC", "market": "India", "fmt": "index"},
+    {"label": "Nifty Midcap", "symbol": "^NSEMDCP50", "market": "India", "fmt": "index"},
+    {"label": "Sensex", "symbol": "^BSESN", "market": "India", "fmt": "index"},
+    {"label": "DFMGI", "symbol": "DFMGI.AE", "market": "Dubai", "fmt": "index"},
+    {"label": "FADGI", "symbol": "FADGI.AE", "market": "Abu Dhabi", "fmt": "index"},
+    {"label": "USD/INR", "symbol": "INR=X", "market": "FX", "fmt": "fx"},
+    {"label": "Nasdaq", "symbol": "^IXIC", "market": "US", "fmt": "index"},
+    {"label": "S&P 500", "symbol": "^GSPC", "market": "US", "fmt": "index"},
+    {"label": "TSX Composite", "symbol": "^GSPTSE", "market": "Canada", "fmt": "index"},
+]
+MARKET_METRIC_SYMBOLS = [m["symbol"] for m in MARKET_METRICS]
 
 
 def common(pf, active: str, member: str | None) -> dict:
@@ -15,17 +28,72 @@ def common(pf, active: str, member: str | None) -> dict:
             "freshness": f"Updated {pf.asof:%d %b %Y %H:%M} · live prices {live}/{total}"}
 
 
+def _market_value(price, fmt: str) -> str:
+    if price is None:
+        return "--"
+    if fmt == "fx":
+        return f"{price:.2f}"
+    return f"{price:,.0f}" if abs(price) >= 1000 else f"{price:,.2f}"
+
+
+def market_metrics(quotes: dict | None = None) -> list[dict]:
+    quotes = quotes or {}
+    out = []
+    for metric in MARKET_METRICS:
+        q = quotes.get(metric["symbol"])
+        day = q.day_pct if q and q.day_pct is not None else None
+        out.append({
+            "label": metric["label"],
+            "symbol": metric["symbol"],
+            "market": metric["market"],
+            "value": _market_value(q.price if q else None, metric["fmt"]),
+            "change": pmod.fmt_pct(day) if day is not None else "--",
+            "known": q is not None,
+            "up": (day or 0) >= 0,
+        })
+    return out
+
+
+def _asset_donut(t) -> dict:
+    entries = []
+    for idx, (key, label, _tag) in enumerate(_GROUPS):
+        value = t.equity_value if key == "equity" else t.extras_by_class.get(key, 0.0)
+        entries.append({"label": label, "value": value,
+                        "color": charts.CHART_COLORS[idx % len(charts.CHART_COLORS)]})
+    return charts.donut_chart(entries)
+
+
+def _family_donut(pf, member) -> dict:
+    if member:
+        selected = pf.totals(member).total_value
+        rest = max(pf.totals().total_value - selected, 0.0)
+        chart = charts.donut_chart([
+            {"label": member, "value": selected, "color": charts.CHART_COLORS[0]},
+            {"label": "Rest of Family", "value": rest, "color": charts.CHART_COLORS[4]},
+        ])
+        chart["title"] = f"{member} vs Family"
+        return chart
+    entries = [{"label": m, "value": pf.totals(m).total_value,
+                "color": charts.CHART_COLORS[idx % len(charts.CHART_COLORS)]}
+               for idx, m in enumerate(pf.members)]
+    chart = charts.donut_chart(entries)
+    chart["title"] = "Family Split"
+    return chart
+
+
 def overview(pf, member, rng: str) -> dict:
     t = pf.totals(member)
     cards = [
-        {"label": "Total Value", "value": pmod.fmt_short(t.total_value),
+        {"label": "Current Value", "value": pmod.fmt_short(t.total_value),
          "sub": pmod.fmt_inr(t.total_value), "tone": "muted"},
-        {"label": "Unrealised P/L", "value": pmod.fmt_short(t.pl),
+        {"label": "Total Investment", "value": pmod.fmt_short(t.invested_known),
+         "sub": "Known cost basis", "tone": "muted"},
+        {"label": "Total Return", "value": pmod.fmt_short(t.pl),
          "sub": (pmod.fmt_pct(t.pl_pct) if t.pl_pct is not None else "—"),
          "tone": "up" if t.pl >= 0 else "down"},
         {"label": "Day P/L", "value": pmod.fmt_short(t.day_pl),
          "sub": pmod.fmt_pct(t.day_pl_pct), "tone": "up" if t.day_pl >= 0 else "down"},
-        {"label": "Cash Available", "value": pmod.fmt_short(t.extras_by_class.get("cash", 0.0)),
+        {"label": "Cash / Unallocated", "value": pmod.fmt_short(t.extras_by_class.get("cash", 0.0)),
          "sub": f"{(t.extras_by_class.get('cash', 0.0)/t.total_value*100 if t.total_value else 0):.1f}% of portfolio",
          "tone": "muted"},
     ]
@@ -33,51 +101,99 @@ def overview(pf, member, rng: str) -> dict:
                "up": (c.day_pct or 0) >= 0, "short": pmod.fmt_short(c.value)}
               for c in pf.movers(member)]
     return {"cards": cards, "alloc": charts.alloc_segments(t), "movers": movers,
-            "range": rng, "ranges": list(RANGE_TO_PERIOD)}
+            "range": rng, "ranges": list(RANGE_TO_PERIOD),
+            "market_metrics": market_metrics(),
+            "asset_donut": _asset_donut(t), "family_donut": _family_donut(pf, member),
+            "watchlist_preview": []}
 
 
-def holdings(pf, member, q: str) -> dict:
+def watchlist_preview(base_dir, member: str | None, limit: int = 6) -> list[dict]:
+    from app import watchlist as wmod
+    return wmod.with_quotes(base_dir, wmod.filtered(wmod.load(base_dir), member=member, limit=limit))
+
+
+def watchlist_ctx(base_dir, member: str | None, q: str = "", market: str = "",
+                  group: str = "", category: str = "", subcategory: str = "") -> dict:
+    from app import watchlist as wmod
+    items = wmod.with_quotes(base_dir, wmod.filtered(wmod.load(base_dir), q=q, market=market,
+                                                     member=member, group=group,
+                                                     category=category,
+                                                     subcategory=subcategory))
+    boards = []
+    for board in wmod.open_boards(base_dir):
+        bitems = wmod.with_quotes(base_dir, wmod.board_items(base_dir, board, q=q))
+        board = dict(board)
+        board["items"] = bitems
+        board["count"] = len(bitems)
+        boards.append(board)
+    return {"items": items, "q": q or "", "watch_market": market or "",
+            "watch_group": group or "", "watch_category": category or "",
+            "watch_subcategory": subcategory or "",
+            "watch_markets": wmod.MARKETS, "watch_groups": wmod.GROUPS,
+            "watch_categories": wmod.CATEGORIES, "watch_subcategories": wmod.SUBCATEGORIES,
+            "boards": boards, "max_boards": wmod.MAX_OPEN_BOARDS, "count": len(items)}
+
+
+def holdings(pf, member, q: str, manual_items: list | None = None) -> dict:
     ql = (q or "").lower().strip()
     cls_by_isin = {p.isin: p.cls for p in pf.positions}
+    source_by_isin = {}
+    for p in pf.positions:
+        if member is not None and p.member != member:
+            continue
+        source_by_isin.setdefault(p.isin, set()).add(getattr(p, "source", "excel"))
+    rows = []
+    total_value = 0.0
+    for c in pf.consolidated(member):
+        if ql and ql not in c.name.lower() and ql not in (c.nse_symbol or "").lower():
+            continue
+        total_value += c.value
+        sources = source_by_isin.get(c.isin, {"excel"})
+        source = "Mixed" if len(sources) > 1 else ("Manual" if "manual" in sources else "ICICI")
+        rows.append({"name": c.name.title(), "isin": c.isin, "nse": c.nse_symbol or "",
+                     "qty": c.qty, "avg": c.avg_cost, "price": c.price,
+                     "value": pmod.fmt_short(c.value), "value_num": c.value,
+                     "pl": (pmod.fmt_pct(c.pl_pct) if c.pl_pct is not None else "—"),
+                     "pl_up": (c.pl_pct or 0) >= 0, "pl_known": c.pl_pct is not None,
+                     "day": (pmod.fmt_pct(c.day_pct) if c.day_pct is not None else "—"),
+                     "day_up": (c.day_pct or 0) >= 0, "day_known": c.day_pct is not None,
+                     "held_by": c.held_by, "live": c.price_live,
+                     "source": source, "source_ids": c.source_ids,
+                     "asset_class": cls_by_isin.get(c.isin, "equity")})
+
     groups = []
     for key, title, tag in _GROUPS:
-        rows = []
+        group_rows = []
         sub = 0.0
-        for c in pf.consolidated(member):
-            if cls_by_isin.get(c.isin) != key:
+        for row in rows:
+            if row["asset_class"] != key:
                 continue
-            if ql and ql not in c.name.lower() and ql not in (c.nse_symbol or "").lower():
-                continue
-            sub += c.value
-            rows.append({"name": c.name.title(), "nse": c.nse_symbol or "—",
-                         "qty": c.qty, "avg": c.avg_cost, "price": c.price,
-                         "value": pmod.fmt_short(c.value),
-                         "pl": (pmod.fmt_pct(c.pl_pct) if c.pl_pct is not None else "—"),
-                         "pl_up": (c.pl_pct or 0) >= 0, "pl_known": c.pl_pct is not None,
-                         "day": (pmod.fmt_pct(c.day_pct) if c.day_pct is not None else "—"),
-                         "day_up": (c.day_pct or 0) >= 0, "day_known": c.day_pct is not None,
-                         "held_by": c.held_by, "live": c.price_live,
-                         "is_extra": False, "note": ""})
+            sub += row["value_num"]
+            group_rows.append(row)
         for e in [x for x in pf.extras if member is None or x.member == member]:
             if e.asset_class != key:
                 continue
             haystack = f"{e.label} {e.asset_class} {e.note}".lower()
             if ql and ql not in haystack:
                 continue
+            total_value += e.value
             sub += e.value
             pl_pct = (e.value / e.invested - 1) * 100 if e.invested else None
-            rows.append({"name": e.label, "nse": tag or "—", "qty": None,
+            group_rows.append({"name": e.label, "isin": "", "nse": tag or "—", "qty": None,
                          "avg": e.invested, "price": None,
-                         "value": pmod.fmt_short(e.value),
+                         "value": pmod.fmt_short(e.value), "value_num": e.value,
                          "pl": (pmod.fmt_pct(pl_pct) if pl_pct is not None else "—"),
                          "pl_up": (pl_pct or 0) >= 0, "pl_known": pl_pct is not None,
                          "day": "—", "day_up": True, "day_known": False,
                          "held_by": [e.member], "live": True,
-                         "is_extra": True, "note": e.note})
-        if rows:
-            groups.append({"key": key, "title": title, "tag": tag, "rows": rows,
+                         "is_extra": True, "note": e.note, "source": "Manual Asset",
+                         "source_ids": [], "asset_class": key})
+        if group_rows:
+            groups.append({"key": key, "title": title, "tag": tag, "rows": group_rows,
                            "subtotal": pmod.fmt_short(sub)})
-    return {"groups": groups, "q": q or ""}
+    return {"groups": groups, "rows": rows, "q": q or "",
+            "manual_items": manual_items or [], "holdings_total": pmod.fmt_short(total_value),
+            "holdings_count": len(rows)}
 
 
 def rebalance(pf, adv, tab: str) -> dict:

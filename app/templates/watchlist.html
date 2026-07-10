@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% block content %}
+<section class="flex flex-col gap-gutter">
+  <div class="bg-surface rounded-xl shadow-card border border-[#E6E9F0] p-6">
+    <div class="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-5">
+      <div>
+        <h2 class="font-h3 text-h3 text-on-surface">Watchlist Workspace</h2>
+        <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Open up to {{ max_boards }} TradingView-style panels by country, category, subcategory, and holder.</p>
+      </div>
+      <form method="post" action="/refresh">
+        <button class="rounded-lg bg-on-surface px-4 py-2 text-sm font-medium text-white hover:bg-on-surface/90" type="submit">Refresh prices</button>
+      </form>
+    </div>
+
+    <form method="post" action="/watchlist/boards" class="mt-5 grid grid-cols-1 md:grid-cols-5 gap-3">
+      <input name="title" placeholder="Panel title" class="rounded-lg border border-[#E6E9F0] bg-white px-3 py-2.5 font-body-sm text-body-sm outline-none focus:border-primary">
+      <select name="market" class="rounded-lg border border-[#E6E9F0] bg-white px-3 py-2.5 font-body-sm text-body-sm outline-none focus:border-primary">
+        {% for m in watch_markets %}
+        <option value="{{ m }}">{{ m }}</option>
+        {% endfor %}
+      </select>
+      <select name="category" class="rounded-lg border border-[#E6E9F0] bg-white px-3 py-2.5 font-body-sm text-body-sm outline-none focus:border-primary">
+        {% for c in watch_categories %}
+        <option value="{{ c }}">{{ c }}</option>
+        {% endfor %}
+      </select>
+      <select name="subcategory" class="rounded-lg border border-[#E6E9F0] bg-white px-3 py-2.5 font-body-sm text-body-sm outline-none focus:border-primary">
+        {% for s in watch_subcategories + watch_groups %}
+        <option value="{{ s }}">{{ s }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-primary/90">Open Panel</button>
+    </form>
+  </div>
+
+  <div class="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-4 gap-gutter">
+    {% for board in boards %}
+    <section class="bg-surface rounded-xl shadow-card border border-[#E6E9F0] min-w-0 overflow-hidden">
+      <div class="p-4 border-b border-[#E6E9F0] flex items-start justify-between gap-3">
+        <div class="min-w-0">
+          <h3 class="font-h3 text-h3 text-on-surface truncate">{{ board.title }}</h3>
+          <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">{{ board.market }} · {{ board.category }} · {{ board.subcategory }} · {{ board.count }} symbols</p>
+        </div>
+        <form method="post" action="/watchlist/boards/{{ board.id }}/close">
+          <input type="hidden" name="member_filter" value="{{ member or 'All' }}">
+          <button type="submit" class="rounded-full border border-[#E6E9F0] px-2.5 py-1 text-xs font-medium text-on-surface-variant hover:text-status-error hover:border-status-error">Close</button>
+        </form>
+      </div>
+      <div class="max-h-[560px] overflow-auto divide-y divide-[#E6E9F0]">
+        {% for item in board["items"] %}
+        <div class="p-4 hover:bg-surface-container-low/50">
+          <div class="flex items-start justify-between gap-3">
+            <a href="{{ item.url }}" target="_blank" rel="noreferrer" class="min-w-0">
+              <div class="font-body-sm text-body-sm font-semibold text-on-surface truncate">{{ item.name }}</div>
+              <div class="font-number-display text-xs text-primary mt-1 truncate">{{ item.symbol }}</div>
+            </a>
+            <div class="text-right shrink-0">
+              {% if item.price_known %}
+              <div class="font-number-display text-sm text-on-surface">{{ '%.2f'|format(item.price) }}</div>
+              <div class="font-number-display text-xs {% if (item.day_pct or 0) >= 0 %}text-status-success{% else %}text-status-error{% endif %}">
+                {% if item.day_pct is not none %}{{ '%+.1f'|format(item.day_pct) }}%{% else %}--{% endif %}
+              </div>
+              {% else %}
+              <div class="font-number-display text-sm text-outline">--</div>
+              <div class="text-xs text-outline">stale</div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="mt-3 flex flex-wrap gap-2">
+            <span class="rounded-full bg-secondary-container px-2 py-0.5 text-xs font-medium text-primary">{{ item.market }}</span>
+            <span class="rounded-full bg-white px-2 py-0.5 text-xs text-on-surface-variant border border-[#E6E9F0]">{{ item.category }}</span>
+            <span class="rounded-full bg-white px-2 py-0.5 text-xs text-on-surface-variant border border-[#E6E9F0]">{{ item.subcategory }}</span>
+          </div>
+        </div>
+        {% else %}
+        <div class="p-10 text-center">
+          <h4 class="font-body-md text-body-md font-medium text-on-surface">No symbols in this panel</h4>
+          <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Add or import symbols for this category.</p>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+    {% endfor %}
+  </div>
+
+  <details class="bg-surface rounded-xl shadow-card border border-[#E6E9F0] overflow-hidden">
+    <summary class="cursor-pointer p-5 font-h3 text-h3 text-on-surface">Manage symbols, import, and export</summary>
+    <div class="border-t border-[#E6E9F0] p-6 grid grid-cols-1 xl:grid-cols-3 gap-gutter">
+      <form method="get" action="/watchlist" class="xl:col-span-3 grid grid-cols-1 md:grid-cols-5 gap-3">
+        {% if member %}<input type="hidden" name="member" value="{{ member }}">{% endif %}
+        <div class="relative md:col-span-2">
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">{{ icon('search') }}</span>
+          <input name="q" value="{{ q }}" placeholder="Search symbol, name, category..." class="w-full rounded-lg border border-[#E6E9F0] bg-white py-2.5 pl-11 pr-4 font-body-sm text-body-sm outline-none focus:border-primary">
+        </div>
+        <select name="market" class="rounded-lg border border-[#E6E9F0] bg-white px-3 py-2.5 font-body-sm text-body-sm outline-none focus:border-primary">
+          <option value="">All markets</option>
+          {% for m in watch_markets %}<option value="{{ m }}" {% if m == watch_market %}selected{% endif %}>{{ m }}</option>{% endfor %}
+        </select>
+        <select name="category" class="rounded-lg border border-[#E6E9F0] bg-white px-3 py-2.5 font-body-sm text-body-sm outline-none focus:border-primary">
+          <option value="">All categories</option>
+          {% for c in watch_categories %}<option value="{{ c }}" {% if c == watch_category %}selected{% endif %}>{{ c }}</option>{% endfor %}
+        </select>
+        <a href="/watchlist/export?{% if member %}member={{ member }}&{% endif %}{% if watch_market %}market={{ watch_market }}&{% endif %}{% if watch_category %}category={{ watch_category }}&{% endif %}{% if watch_subcategory %}subcategory={{ watch_subcategory }}&{% endif %}{% if q %}q={{ q }}{% endif %}" class="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-primary/90">
+          {{ icon('download') }} Export TXT
+        </a>
+      </form>
+
+      <form method="post" action="/watchlist/items" class="rounded-xl border border-[#E6E9F0] p-5 flex flex-col gap-3">
+        <h3 class="font-h3 text-h3 text-on-surface">Add Symbol</h3>
+        <input name="symbol" required placeholder="Exchange:Symbol" class="rounded-lg border border-[#E6E9F0] bg-white px-3 py-2.5 font-body-sm text-body-sm outline-none focus:border-primary">
+        <input name="name" placeholder="Display name" class="rounded-lg border border-[#E6E9F0] bg-white px-3 py-2.5 font-body-sm text-body-sm outline-none focus:border-primary">
+        <select name="market" class="rounded-lg border border-[#E6E9F0] bg-white px-3 py-2.5 font-body-sm text-body-sm outline-none focus:border-primary">
+          {% for m in watch_markets %}<option value="{{ m }}" {% if m == (watch_market or 'India') %}selected{% endif %}>{{ m }}</option>{% endfor %}
+        </select>
+        <select name="category" class="rounded-lg border border-[#E6E9F0] bg-white px-3 py-2.5 font-body-sm text-body-sm outline-none focus:border-primary">
+          {% for c in watch_categories %}<option value="{{ c }}" {% if c == (watch_category or 'Stocks') %}selected{% endif %}>{{ c }}</option>{% endfor %}
+        </select>
+        <select name="subcategory" class="rounded-lg border border-[#E6E9F0] bg-white px-3 py-2.5 font-body-sm text-body-sm outline-none focus:border-primary">
+          {% for s in watch_subcategories + watch_groups %}<option value="{{ s }}" {% if s == (watch_subcategory or 'Custom') %}selected{% endif %}>{{ s }}</option>{% endfor %}
+        </select>
+        <input type="hidden" name="member" value="{{ member or 'All' }}">
+        <button type="submit" class="rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-primary/90">Add Symbol</button>
+      </form>
+
+      <form method="post" action="/watchlist/import" enctype="multipart/form-data" class="rounded-xl border border-[#E6E9F0] p-5 flex flex-col gap-3">
+        <h3 class="font-h3 text-h3 text-on-surface">Import TXT</h3>
+        <textarea name="symbols" rows="5" placeholder="NSE:TCS,NASDAQ:AAPL,DFM:DFMGI" class="rounded-lg border border-[#E6E9F0] bg-white px-3 py-2.5 font-body-sm text-body-sm outline-none focus:border-primary"></textarea>
+        <input name="file" type="file" accept=".txt,text/plain" class="font-body-sm text-body-sm text-on-surface-variant">
+        <select name="market" class="rounded-lg border border-[#E6E9F0] bg-white px-3 py-2.5 font-body-sm text-body-sm outline-none focus:border-primary">
+          {% for m in watch_markets %}<option value="{{ m }}" {% if m == (watch_market or 'Global') %}selected{% endif %}>{{ m }}</option>{% endfor %}
+        </select>
+        <select name="category" class="rounded-lg border border-[#E6E9F0] bg-white px-3 py-2.5 font-body-sm text-body-sm outline-none focus:border-primary">
+          {% for c in watch_categories %}<option value="{{ c }}" {% if c == (watch_category or 'Custom') %}selected{% endif %}>{{ c }}</option>{% endfor %}
+        </select>
+        <select name="subcategory" class="rounded-lg border border-[#E6E9F0] bg-white px-3 py-2.5 font-body-sm text-body-sm outline-none focus:border-primary">
+          {% for s in watch_subcategories + watch_groups %}<option value="{{ s }}" {% if s == (watch_subcategory or 'Custom') %}selected{% endif %}>{{ s }}</option>{% endfor %}
+        </select>
+        <input type="hidden" name="member" value="{{ member or 'All' }}">
+        <button type="submit" class="rounded-lg bg-on-surface px-4 py-2.5 text-sm font-medium text-white hover:bg-on-surface/90">Import Symbols</button>
+      </form>
+
+      <div class="rounded-xl border border-[#E6E9F0] p-5">
+        <h3 class="font-h3 text-h3 text-on-surface">{{ count }} Filtered Symbols</h3>
+        <div class="mt-4 max-h-[360px] overflow-auto divide-y divide-[#E6E9F0]">
+          {% for item in items %}
+          <div class="py-3 flex items-center justify-between gap-3">
+            <div class="min-w-0">
+              <div class="font-body-sm text-body-sm font-medium text-on-surface truncate">{{ item.name }}</div>
+              <div class="text-xs text-on-surface-variant truncate">{{ item.symbol }} · {{ item.market }} · {{ item.subcategory }}</div>
+            </div>
+            <form method="post" action="/watchlist/items/{{ item.id }}/delete">
+              <input type="hidden" name="member_filter" value="{{ member or 'All' }}">
+              <input type="hidden" name="market_filter" value="{{ watch_market }}">
+              <input type="hidden" name="category_filter" value="{{ watch_category }}">
+              <input type="hidden" name="subcategory_filter" value="{{ watch_subcategory }}">
+              <input type="hidden" name="q_filter" value="{{ q }}">
+              <button class="rounded-full border border-[#E6E9F0] px-2.5 py-1 text-xs font-medium text-on-surface-variant hover:border-status-error hover:text-status-error" type="submit">Remove</button>
+            </form>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </details>
+</section>
+{% endblock %}

@@ -12,8 +12,33 @@
   </div>
 </div>
 {% else %}
+<!-- Market Pulse -->
+<section class="bg-surface rounded-xl p-5 shadow-card border border-[#E6E9F0]">
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+    <div>
+      <h2 class="font-h3 text-h3 text-on-surface">Market Pulse</h2>
+      <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Key indices and USD/INR for the morning scan.</p>
+    </div>
+    <span class="text-xs text-outline font-medium uppercase tracking-wider">Live when available</span>
+  </div>
+  <div class="grid grid-cols-2 md:grid-cols-5 xl:grid-cols-10 gap-3">
+    {% for m in market_metrics %}
+    <div class="rounded-lg border border-[#E6E9F0] bg-surface-container-low/60 px-3 py-3 min-w-0">
+      <div class="flex items-center justify-between gap-2">
+        <span class="font-body-sm text-body-sm font-medium text-on-surface truncate">{{ m.label }}</span>
+        <span class="text-[10px] uppercase tracking-wider text-outline">{{ m.market }}</span>
+      </div>
+      <div class="mt-2 font-number-display text-lg text-on-surface truncate">{{ m.value }}</div>
+      <div class="mt-1 text-xs font-medium {% if not m.known %}text-outline{% elif m.up %}text-status-success{% else %}text-status-error{% endif %}">
+        {{ m.change }}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
 <!-- KPI Cards Grid -->
-<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-gutter">
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-gutter">
   {% for c in cards %}
   <div class="bg-surface rounded-xl p-6 shadow-card border border-[#E6E9F0] flex flex-col gap-2 hover:shadow-card-hover hover:border-primary/30 transition-all cursor-default">
     <h3 class="font-body-sm text-body-sm text-on-surface-variant font-medium">{{ c.label }}</h3>
@@ -36,65 +61,155 @@
   </div>
   {% endfor %}
 </div>
+
 <!-- Main Charts Row -->
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter mt-2">
-  <!-- Portfolio Performance Chart (Spans 2 columns) -->
   <div class="lg:col-span-2 bg-surface rounded-xl p-6 shadow-card border border-[#E6E9F0] flex flex-col">
     <div class="flex justify-between items-center mb-6">
-      <h2 class="font-h3 text-h3 text-on-surface">Portfolio Value</h2>
-      <!-- Range Tabs -->
-      <div class="flex bg-surface-container-low rounded-lg p-1">
-        {% for r in ranges %}
-        <a href="?range={{ r }}&member={{ member or 'All' }}" class="px-3 py-1 text-sm font-medium rounded-md transition-colors {% if r == range %}bg-white text-primary shadow-sm border border-[#E6E9F0]{% else %}text-on-surface-variant hover:text-primary{% endif %}">{{ r }}</a>
-        {% endfor %}
+      <div>
+        <h2 class="font-h3 text-h3 text-on-surface">Portfolio Summary</h2>
+        <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Dense first-screen scan without the historical graph.</p>
       </div>
+      <form method="post" action="/refresh">
+        <button class="rounded-lg bg-on-surface px-4 py-2 text-sm font-medium text-white hover:bg-on-surface/90" type="submit">Refresh local data</button>
+      </form>
     </div>
-    <!-- Chart Canvas Area -->
-    <div class="relative w-full h-[300px] flex-grow flex items-end">
-      <div class="absolute inset-0 z-10">
-        <svg class="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 1000 250">
-          <defs>
-            <linearGradient id="areaGradient" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stop-color="#005c55" stop-opacity="0.2"></stop>
-              <stop offset="100%" stop-color="#005c55" stop-opacity="0.0"></stop>
-            </linearGradient>
-          </defs>
-          <!-- Area fill -->
-          <path d="{{ chart.area }}" fill="url(#areaGradient)"></path>
-          <!-- Line -->
-          <path d="{{ chart.line }}" fill="none" stroke="#005c55" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"></path>
-        </svg>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="rounded-xl border border-[#E6E9F0] bg-surface-container-low/60 p-5">
+        <h3 class="font-body-sm text-body-sm font-medium text-on-surface-variant">Largest Asset Classes</h3>
+        <div class="mt-4 flex flex-col gap-3">
+          {% for s in asset_donut.segments[:4] %}
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background: {{ s.color }}"></span>
+              <span class="font-body-sm text-body-sm text-on-surface truncate">{{ s.label }}</span>
+            </div>
+            <span class="font-number-display text-sm text-on-surface">{{ s.short }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="rounded-xl border border-[#E6E9F0] bg-surface-container-low/60 p-5">
+        <h3 class="font-body-sm text-body-sm font-medium text-on-surface-variant">{{ family_donut.title }}</h3>
+        <div class="mt-4 flex flex-col gap-3">
+          {% for s in family_donut.segments %}
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background: {{ s.color }}"></span>
+              <span class="font-body-sm text-body-sm text-on-surface truncate">{{ s.label }}</span>
+            </div>
+            <span class="font-number-display text-sm text-on-surface">{{ s.short }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="md:col-span-2 rounded-xl border border-[#E6E9F0] bg-white p-5">
+        <h3 class="font-body-sm text-body-sm font-medium text-on-surface-variant">Today’s Movers</h3>
+        <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+          {% for m in movers %}
+          <div class="flex items-center justify-between rounded-lg bg-surface-container-low/60 px-3 py-2">
+            <span class="font-body-sm text-body-sm text-on-surface truncate">{{ m.name }}</span>
+            <span class="font-number-display text-sm {% if m.up %}text-status-success{% else %}text-status-error{% endif %}">{{ m.pct }}</span>
+          </div>
+          {% else %}
+          <p class="font-body-sm text-body-sm text-on-surface-variant">No movers today.</p>
+          {% endfor %}
+        </div>
       </div>
     </div>
   </div>
-  <!-- Asset Allocation & Top Movers Column -->
+  <!-- Allocation Insight Column -->
   <div class="flex flex-col gap-gutter">
-    <!-- Asset Allocation -->
     <div class="bg-surface rounded-xl p-6 shadow-card border border-[#E6E9F0] flex flex-col">
-      <h2 class="font-h3 text-h3 text-on-surface mb-6">Asset Allocation</h2>
-      <div class="flex flex-col gap-4">
-        <!-- Visual Progress Bar -->
-        <div class="w-full h-4 rounded-full overflow-hidden flex shadow-inner">
-          {% for s in alloc %}
-          <div class="h-full" style="width: {{ s.pct }}%; background: {{ s.color }}"></div>
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="font-h3 text-h3 text-on-surface">Asset-Class Split</h2>
+        <span class="text-xs text-outline font-medium uppercase tracking-wider">{{ asset_donut.total }}</span>
+      </div>
+      <div class="flex items-center gap-5">
+        <div class="relative w-32 h-32 rounded-full shrink-0" style="background: {{ asset_donut.gradient }}">
+          <div class="absolute inset-5 rounded-full bg-surface flex items-center justify-center text-center">
+            <span class="font-body-sm text-body-sm font-medium text-primary">Assets</span>
+          </div>
+        </div>
+        <div class="flex-1 flex flex-col gap-2 min-w-0">
+          {% for s in asset_donut.segments %}
+          <div class="flex items-center justify-between gap-3 font-body-sm text-body-sm">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background: {{ s.color }}"></span>
+              <span class="text-on-surface truncate">{{ s.label }}</span>
+            </div>
+            <span class="font-medium font-number-display shrink-0">{{ '%.1f'|format(s.pct) }}%</span>
+          </div>
           {% endfor %}
         </div>
-        <!-- Legend List -->
-        <div class="flex flex-col gap-3 mt-2">
-          {% for s in alloc %}
-          <div class="flex justify-between items-center font-body-sm text-body-sm">
-            <div class="flex items-center gap-2">
-              <span class="w-3 h-3 rounded-full" style="background: {{ s.color }}"></span>
-              <span class="text-on-surface">{{ s.label }}</span>
+      </div>
+      <div class="w-full h-3 rounded-full overflow-hidden flex shadow-inner mt-5">
+        {% for s in alloc %}
+        <div class="h-full" style="width: {{ s.pct }}%; background: {{ s.color }}"></div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="bg-surface rounded-xl p-6 shadow-card border border-[#E6E9F0] flex flex-col flex-grow">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="font-h3 text-h3 text-on-surface">{{ family_donut.title }}</h2>
+        <span class="text-xs text-outline font-medium uppercase tracking-wider">{{ family_donut.total }}</span>
+      </div>
+      <div class="flex items-center gap-5">
+        <div class="relative w-32 h-32 rounded-full shrink-0" style="background: {{ family_donut.gradient }}">
+          <div class="absolute inset-5 rounded-full bg-surface flex items-center justify-center text-center">
+            <span class="font-body-sm text-body-sm font-medium text-primary">Family</span>
+          </div>
+        </div>
+        <div class="flex-1 flex flex-col gap-2 min-w-0">
+          {% for s in family_donut.segments %}
+          <div class="flex items-center justify-between gap-3 font-body-sm text-body-sm">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background: {{ s.color }}"></span>
+              <span class="text-on-surface truncate">{{ s.label }}</span>
             </div>
-            <span class="font-medium font-number-display">{{ '%.1f'|format(s.pct) }}% &middot; {{ s.short }}</span>
+            <span class="font-medium font-number-display shrink-0">{{ s.short }}</span>
           </div>
           {% endfor %}
         </div>
       </div>
     </div>
-    <!-- Top Movers -->
-    <div class="bg-surface rounded-xl p-6 shadow-card border border-[#E6E9F0] flex flex-col flex-grow">
+  </div>
+</div>
+
+<!-- Watchlist & Movers Row -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter mt-2">
+  <section class="lg:col-span-2 bg-surface rounded-xl p-6 shadow-card border border-[#E6E9F0]">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-5">
+      <div>
+        <h2 class="font-h3 text-h3 text-on-surface">Watchlist</h2>
+        <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">TradingView-compatible local lists for India, US, UAE, Canada, and custom symbols.</p>
+      </div>
+      <a href="/watchlist{% if member %}?member={{ member }}{% endif %}" class="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90">View more</a>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+      {% for item in watchlist_preview %}
+      <a href="{{ item.url }}" target="_blank" rel="noreferrer" class="rounded-lg border border-[#E6E9F0] bg-surface-container-low/60 p-4 hover:border-primary/40 hover:bg-white transition-colors">
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <div class="font-body-sm text-body-sm font-medium text-on-surface truncate">{{ item.name }}</div>
+            <div class="font-number-display text-sm text-primary mt-1 truncate">{{ item.symbol }}</div>
+          </div>
+          <span class="rounded-full bg-secondary-container px-2 py-0.5 text-xs font-medium text-primary shrink-0">{{ item.market }}</span>
+        </div>
+        <div class="mt-3 flex flex-wrap gap-2 text-xs text-on-surface-variant">
+          <span>{{ item.group }}</span>
+          <span>&middot;</span>
+          <span>{{ item.member }}</span>
+        </div>
+      </a>
+      {% else %}
+      <p class="font-body-sm text-body-sm text-on-surface-variant">No watchlist items yet.</p>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="bg-surface rounded-xl p-6 shadow-card border border-[#E6E9F0] flex flex-col">
       <div class="flex justify-between items-center mb-4">
         <h2 class="font-h3 text-h3 text-on-surface">Top Movers</h2>
         <span class="text-xs text-outline font-medium uppercase tracking-wider">Today</span>
@@ -115,8 +230,7 @@
         <p class="font-body-sm text-body-sm text-on-surface-variant py-3">No movers today.</p>
         {% endfor %}
       </div>
-    </div>
-  </div>
+  </section>
 </div>
 {% endif %}
 {% endblock %}

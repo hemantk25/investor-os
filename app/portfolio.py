@@ -18,6 +18,8 @@ class Position:
     price_live: bool
     day_pct: float | None
     cls: str = "equity"
+    source: str = "excel"
+    source_id: int | None = None
 
     @property
     def value(self):
@@ -48,6 +50,8 @@ class ConsolidatedPosition:
     day_pct: float | None
     held_by: list = field(default_factory=list)
     cost_partial: bool = False
+    source: str = "excel"
+    source_ids: list = field(default_factory=list)
 
     value = Position.value
     cost = Position.cost
@@ -96,10 +100,13 @@ class Portfolio:
             kqty = sum(l.qty for l in known)
             avg = (sum(l.qty * l.avg_cost for l in known) / kqty) if kqty else None
             l0 = lots[0]
+            sources = sorted({getattr(l, "source", "excel") for l in lots})
             out.append(ConsolidatedPosition(
                 name=l0.name, isin=isin, nse_symbol=l0.nse_symbol, qty=qty, avg_cost=avg,
                 price=l0.price, price_live=l0.price_live, day_pct=l0.day_pct,
-                held_by=sorted({l.member for l in lots}), cost_partial=kqty < qty))
+                held_by=sorted({l.member for l in lots}), cost_partial=kqty < qty,
+                source=sources[0] if len(sources) == 1 else "mixed",
+                source_ids=sorted([l.source_id for l in lots if l.source_id is not None])))
         return sorted(out, key=lambda c: -c.value)
 
     def _extras(self, member=None):
@@ -141,7 +148,9 @@ def build_portfolio(pr, isin_map, quotes, extras):
             member=h.member, name=h.name, isin=h.isin, icici_symbol=h.icici_symbol,
             nse_symbol=sym, qty=h.qty, avg_cost=h.avg_cost, price=price,
             price_live=q is not None,
-            day_pct=q.day_pct if q else h.excel_day_pct, cls="equity"))
+            day_pct=q.day_pct if q else h.excel_day_pct, cls="equity",
+            source=getattr(h, "source", "excel"),
+            source_id=getattr(h, "source_id", None)))
     return Portfolio(positions, extras, pr.asof, pr.skipped, pr.members)
 
 

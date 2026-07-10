@@ -55,8 +55,23 @@
         </form>
         {% endif %}
       </div>
-      {% if has_brief %}
-      <div class="doc-body">{{ brief_html | safe }}</div>
+      {% if has_brief and sections.single is defined %}
+      <div class="doc-body">{{ sections.single | safe }}</div>
+      {% elif has_brief %}
+      <div class="flex flex-col gap-8">
+        {% if sections.market_brief %}
+        <div>
+          <h3 class="font-h3 text-h3 text-on-surface mb-3">Market Brief</h3>
+          <div class="doc-body">{{ sections.market_brief | safe }}</div>
+        </div>
+        {% endif %}
+        {% if sections.my_stocks %}
+        <div>
+          <h3 class="font-h3 text-h3 text-on-surface mb-3">My Stocks</h3>
+          <div class="doc-body">{{ sections.my_stocks | safe }}</div>
+        </div>
+        {% endif %}
+      </div>
       {% else %}
       <div class="flex flex-col items-center justify-center text-center py-20">
         <div class="w-14 h-14 rounded-full bg-secondary-container flex items-center justify-center text-primary mb-4">{{ icon('news') }}</div>
@@ -65,6 +80,44 @@
       </div>
       {% endif %}
     </article>
+
+    {% if impact or sections.impact_notes %}
+    <article class="bg-surface rounded-xl p-8 shadow-card border border-[#E6E9F0]">
+      <h2 class="font-h3 text-h3 text-on-surface mb-6">Impact</h2>
+      {% if impact %}
+      <div class="overflow-x-auto">
+        <table class="w-full font-body-sm text-body-sm">
+          <thead>
+            <tr class="text-left text-on-surface-variant border-b border-[#E6E9F0]">
+              <th class="py-2 pr-4 font-medium">Holding</th>
+              <th class="py-2 pr-4 font-medium">Headline</th>
+              <th class="py-2 pr-4 font-medium text-right">Day</th>
+              <th class="py-2 pr-4 font-medium text-right">₹ Impact</th>
+              <th class="py-2 font-medium text-right">Position</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in impact %}
+            <tr class="border-b border-[#E6E9F0] last:border-0">
+              <td class="py-3 pr-4 font-medium text-on-surface">{{ row.name }}</td>
+              <td class="py-3 pr-4">
+                <a href="{{ row.url }}" target="_blank" rel="noopener" class="text-primary hover:underline">{{ row.headline }}</a>
+                {% if row.publisher %}<span class="text-on-surface-variant"> · {{ row.publisher }}</span>{% endif %}
+              </td>
+              <td class="py-3 pr-4 text-right font-number-display {% if row.up %}text-status-success{% else %}text-status-error{% endif %}">{{ row.day_pct_fmt }}</td>
+              <td class="py-3 pr-4 text-right font-number-display {% if row.up %}text-status-success{% else %}text-status-error{% endif %}">{{ row.day_impact_fmt }}</td>
+              <td class="py-3 text-right font-number-display text-on-surface-variant">{{ row.value_fmt }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+      {% if sections.impact_notes %}
+      <div class="doc-body mt-6">{{ sections.impact_notes | safe }}</div>
+      {% endif %}
+    </article>
+    {% endif %}
   </div>
 
   <aside class="flex flex-col gap-gutter">
@@ -80,17 +133,6 @@
           <span class="font-number-display text-sm {% if move.startswith('+') %}text-status-success{% else %}text-status-error{% endif %}">{{ move }}</span>
         </div>
         {% endfor %}
-      </div>
-    </div>
-    <div class="bg-surface rounded-xl p-6 shadow-card border border-[#E6E9F0]">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="font-h3 text-h3 text-on-surface">Weekly Digest</h2>
-        <span class="rounded-full bg-surface-container-low px-2 py-0.5 text-xs text-outline">sample</span>
-      </div>
-      <div class="font-body-sm text-body-sm text-on-surface-variant flex flex-col gap-3">
-        <p><strong class="text-on-surface">What moved:</strong> Large-cap banks and IT names remain the main watchlist for portfolio impact.</p>
-        <p><strong class="text-on-surface">News missed:</strong> Replace this sample panel in Phase 4 with scheduled news and Telegram delivery.</p>
-        <p><strong class="text-on-surface">One action:</strong> Review the generated brief against the investor one-pager before acting.</p>
       </div>
     </div>
   </aside>

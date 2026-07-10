@@ -222,18 +222,31 @@ def rebalance(pf, adv, tab: str) -> dict:
             "summary": f"{done}/{len(adv.exits)} exits done"}
 
 
-def brief_ctx(base_dir, pf, pick: str | None) -> dict:
-    import markdown as md
+def brief_ctx(base_dir, pf, pick: str | None, data_dir) -> dict:
+    from app import brief as bmod
+    from app import news as nmod
     briefs_dir = base_dir / "briefs"
     files = sorted(briefs_dir.glob("*.md"), reverse=True) if briefs_dir.exists() else []
     dates = [f.stem for f in files]
     chosen = pick if pick in dates else (dates[0] if dates else None)
-    html = ""
+    sections: dict = {}
     if chosen:
-        html = md.markdown((briefs_dir / f"{chosen}.md").read_text(encoding="utf-8"),
-                           extensions=["extra"])
-    return {"dates": dates, "chosen": chosen, "brief_html": html,
-            "has_brief": bool(chosen)}
+        raw_md = (briefs_dir / f"{chosen}.md").read_text(encoding="utf-8")
+        allowed = {item["url"] for item in nmod.load_items(data_dir, limit=5000)}
+        sections = {key: bmod.sanitize_links(html, allowed)
+                    for key, html in bmod.split_brief(raw_md).items()}
+    news_items = nmod.load_items(data_dir, within_hours=48, limit=50)
+    impact = []
+    for row in bmod.impact_rows(pf, news_items):
+        row = dict(row)
+        row["name"] = row["name"].title()
+        row["day_pct_fmt"] = pmod.fmt_pct(row["day_pct"])
+        row["day_impact_fmt"] = pmod.fmt_short(row["day_impact"])
+        row["value_fmt"] = pmod.fmt_short(row["value"])
+        row["up"] = row["day_pct"] >= 0
+        impact.append(row)
+    return {"dates": dates, "chosen": chosen, "sections": sections,
+            "impact": impact, "has_brief": bool(chosen)}
 
 
 def profile_ctx(base_dir) -> dict:

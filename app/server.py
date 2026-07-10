@@ -228,7 +228,7 @@ def create_app() -> Flask:
         if pf is None:
             return render_template("brief.html", **_empty("brief", "Morning Brief"))
         member = _member_arg()
-        ctx = vm.brief_ctx(BASE, pf, request.args.get("pick"))
+        ctx = vm.brief_ctx(BASE, pf, request.args.get("pick"), DATA)
         ctx.update(vm.common(pf, "brief", member))
         ctx["page"] = "Morning Brief"
         ctx["empty"] = False
@@ -244,7 +244,7 @@ def create_app() -> Flask:
         if pf is None:
             return redirect(url_for("brief"))
         try:
-            bmod.generate_brief(pf, BASE)
+            bmod.generate_brief(pf, BASE, DATA)
             return redirect(url_for("brief"))
         except bmod.BriefError as e:
             return redirect(url_for("brief", error=e.message))

@@ -32,7 +32,7 @@ def client(tmp_path, monkeypatch):
     from app import brief as bmod
     monkeypatch.setattr(bmod, "find_claude", lambda: None)
     monkeypatch.setattr(bmod, "generate_brief",
-                        lambda pf, base_dir: Path(base_dir) / "briefs" / "fake.md")
+                        lambda pf, base_dir, data_dir: Path(base_dir) / "briefs" / "fake.md")
 
     c = srv.create_app().test_client()
     c.data_dir = tmp_path

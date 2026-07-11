@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import socket
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -11,7 +12,7 @@ import feedparser
 from app import storage
 
 
-MARKETS = ["India", "US", "UAE", "Canada", "Global"]
+MARKETS = ["Global", "India", "US", "UAE", "Canada"]
 
 MARKET_FEED_CAP = 25
 HOLDING_FEED_CAP = 10
@@ -23,15 +24,83 @@ FEED_TIMEOUT_SECS = 10
 LOCALES = {"India": ("en-IN", "IN", "IN:en"), "US": ("en-US", "US", "US:en"),
            "UAE": ("en-AE", "AE", "AE:en"), "Canada": ("en-CA", "CA", "CA:en"),
            "Global": ("en-US", "US", "US:en")}
-QUERIES = {"India": "Nifty OR Sensex OR Indian stock market",
-           "US": "US stock market OR S&P 500 OR Nasdaq",
-           "UAE": "UAE stocks OR DFM OR ADX", "Canada": "TSX OR Canadian stock market",
-           "Global": "global markets"}
+QUERIES = {"India": "Nifty OR Sensex OR Indian stock market OR Indian business",
+           "US": "US stock market OR S&P 500 OR Nasdaq OR Wall Street",
+           "UAE": "UAE stocks OR DFM OR ADX OR Gulf business",
+           "Canada": "TSX OR Canadian stock market OR Canada business",
+           "Global": "global markets OR world economy OR oil OR rates"}
+
+SOURCES = {
+    "Global": [
+        ("Bloomberg", "bloomberg.com"),
+        ("Wall Street Journal", "wsj.com"),
+        ("Economist", "economist.com"),
+        ("Financial Times", "ft.com"),
+        ("Reuters", "reuters.com"),
+        ("Yahoo Finance", "finance.yahoo.com"),
+        ("CNBC", "cnbc.com"),
+        ("Forbes", "forbes.com"),
+        ("Fortune", "fortune.com"),
+    ],
+    "US": [
+        ("Bloomberg", "bloomberg.com"),
+        ("Wall Street Journal", "wsj.com"),
+        ("Economist", "economist.com"),
+        ("Financial Times", "ft.com"),
+        ("Reuters", "reuters.com"),
+        ("Morningstar", "morningstar.com"),
+        ("Yahoo Finance", "finance.yahoo.com"),
+        ("CNBC", "cnbc.com"),
+        ("Forbes", "forbes.com"),
+        ("Fortune", "fortune.com"),
+    ],
+    "India": [
+        ("Economic Times", "economictimes.indiatimes.com"),
+        ("Mint", "livemint.com"),
+        ("Business Standard", "business-standard.com"),
+        ("Financial Express", "financialexpress.com"),
+        ("Business Line", "thehindubusinessline.com"),
+        ("Moneycontrol", "moneycontrol.com"),
+        ("Yahoo Finance", "finance.yahoo.com"),
+    ],
+    "Canada": [
+        ("BNN Bloomberg", "bnnbloomberg.ca"),
+        ("The Globe and Mail", "theglobeandmail.com"),
+        ("Yahoo Finance Canada", "ca.finance.yahoo.com"),
+        ("Financial Post", "financialpost.com"),
+    ],
+    "UAE": [
+        ("Reuters", "reuters.com"),
+        ("Yahoo Finance", "finance.yahoo.com"),
+        ("Gulf News", "gulfnews.com"),
+        ("Arabian Business", "arabianbusiness.com"),
+        ("Khaleej Times", "khaleejtimes.com"),
+        ("Forbes Middle East", "forbesmiddleeast.com"),
+        ("CNBC Arabia", "cnbcarabia.com"),
+        ("The National", "thenationalnews.com"),
+    ],
+}
+
+
+def _source_clause(market: str) -> str:
+    terms = []
+    for name, domain in SOURCES.get(market, []):
+        if domain:
+            terms.append(f"site:{domain}")
+        else:
+            terms.append(f'"{name}"')
+    return " OR ".join(terms)
+
+
+def market_query(market: str) -> str:
+    base = QUERIES[market]
+    sources = _source_clause(market)
+    return f"({base}) ({sources})" if sources else base
 
 
 def market_feed_url(market: str) -> str:
     hl, gl, ceid = LOCALES[market]
-    return ("https://news.google.com/rss/search?q=" + quote_plus(QUERIES[market])
+    return ("https://news.google.com/rss/search?q=" + quote_plus(market_query(market))
             + f"&hl={hl}&gl={gl}&ceid={quote_plus(ceid)}")
 
 
@@ -45,11 +114,45 @@ def _url_hash(url: str) -> str:
 
 
 def _safe_url(url: str) -> bool:
-    # Feed data is untrusted input; only plain web links may reach an href.
     try:
         return urlparse(url).scheme in ("http", "https")
     except ValueError:
         return False
+
+
+def _ordered(tags) -> list[str]:
+    return [m for m in MARKETS if m in set(tags)]
+
+
+def _infer_markets(title: str, primary: str) -> list[str]:
+    text = (title or "").lower()
+    tags = {primary}
+    if any(k in text for k in ["global", "world", "oil", "crude", "war", "rates", "dollar"]):
+        tags.add("Global")
+    if any(k in text for k in ["india", "nifty", "sensex", "rupee", "rbi", "mumbai"]):
+        tags.add("India")
+    if any(k in text for k in ["us ", "u.s.", "wall street", "s&p", "nasdaq", "fed"]):
+        tags.add("US")
+    if any(k in text for k in ["uae", "dubai", "abu dhabi", "dfm", "adx", "gulf"]):
+        tags.add("UAE")
+    if any(k in text for k in ["canada", "tsx", "toronto", "loonie"]):
+        tags.add("Canada")
+    return _ordered(tags)
+
+
+def _encode_markets(markets: list[str]) -> str:
+    return json.dumps(_ordered(markets))
+
+
+def _decode_markets(value: str | None, fallback: str | None = None) -> list[str]:
+    if value:
+        try:
+            raw = json.loads(value)
+            if isinstance(raw, list):
+                return _ordered([str(x) for x in raw])
+        except Exception:
+            pass
+    return _ordered([fallback] if fallback else [])
 
 
 def normalize_entries(parsed, market: str, isin: str | None, holding_name: str | None) -> list[dict]:
@@ -70,6 +173,7 @@ def normalize_entries(parsed, market: str, isin: str | None, holding_name: str |
             "publisher": publisher,
             "published_at": published_at,
             "market": market,
+            "markets": _infer_markets(title, market),
             "isin": isin,
             "holding_name": holding_name,
         })
@@ -86,18 +190,39 @@ def save_items(data_dir: Path, items: list[dict]) -> int:
             url = item.get("url") or ""
             if not url or not _safe_url(url):
                 continue
+            market = item.get("market") or "Global"
+            markets = item.get("markets") or [market]
             cur = con.execute(
                 """
                 INSERT OR IGNORE INTO news_items(url_hash, title, url, publisher, published_at,
-                                                  market, isin, holding_name, fetched_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                                  market, markets, isin, holding_name, fetched_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (_url_hash(url), item.get("title") or "", url, item.get("publisher"),
-                 item.get("published_at"), item.get("market"), item.get("isin"),
-                 item.get("holding_name"), now),
+                 item.get("published_at"), market, _encode_markets(markets),
+                 item.get("isin"), item.get("holding_name"), now),
             )
             if cur.rowcount and cur.rowcount > 0:
                 inserted += 1
+                continue
+            row = con.execute(
+                "SELECT market, markets FROM news_items WHERE url_hash = ?",
+                (_url_hash(url),),
+            ).fetchone()
+            existing = _decode_markets(row["markets"] if row else None,
+                                       row["market"] if row else None)
+            merged = _ordered(existing + list(markets) + [market])
+            con.execute(
+                """
+                UPDATE news_items
+                   SET markets = ?, fetched_at = ?,
+                       publisher = COALESCE(publisher, ?),
+                       published_at = COALESCE(published_at, ?)
+                 WHERE url_hash = ?
+                """,
+                (_encode_markets(merged), now, item.get("publisher"),
+                 item.get("published_at"), _url_hash(url)),
+            )
         con.commit()
     return inserted
 
@@ -141,7 +266,9 @@ def _fetch_yfinance_news(data_dir: Path, market: str, isin: str | None, name: st
                 continue
             items.append({
                 "title": title, "url": url, "publisher": publisher,
-                "published_at": None, "market": market, "isin": isin, "holding_name": name,
+                "published_at": None, "market": market,
+                "markets": _infer_markets(title, market),
+                "isin": isin, "holding_name": name,
             })
         return save_items(data_dir, items)
     except Exception:
@@ -177,8 +304,8 @@ def load_items(data_dir: Path, market: str | None = None, mine: bool = False,
     conditions = []
     params: list = []
     if market:
-        conditions.append("market = ?")
-        params.append(market)
+        conditions.append("(market = ? OR markets LIKE ?)")
+        params.extend([market, f'%"{market}"%'])
     if mine:
         conditions.append("isin IS NOT NULL")
     if within_hours is not None:
@@ -197,7 +324,12 @@ def load_items(data_dir: Path, market: str | None = None, mine: bool = False,
             """,
             params,
         ).fetchall()
-    return [dict(r) for r in rows]
+    out = []
+    for row in rows:
+        item = dict(row)
+        item["markets_list"] = _decode_markets(item.get("markets"), item.get("market"))
+        out.append(item)
+    return out
 
 
 def prune(data_dir: Path) -> int:

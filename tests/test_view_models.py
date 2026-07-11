@@ -106,9 +106,9 @@ def test_news_ctx_empty_defaults(tmp_path):
     from app import news
     ctx = vm.news_ctx(tmp_path, None, False)
     assert ctx["items"] == []
-    assert ctx["market"] == "All"
+    assert ctx["market"] == "Global"
     assert ctx["mine"] is False
-    assert ctx["markets"] == ["All"] + news.MARKETS
+    assert ctx["markets"] == news.MARKETS
     assert ctx["fetched"] is None
 
 
@@ -139,8 +139,8 @@ def test_news_ctx_items_have_ago_and_filters(tmp_path):
     assert ctx["fetched"] is not None
 
     mine_ctx = vm.news_ctx(tmp_path, None, True)
-    assert len(mine_ctx["items"]) == 1
-    assert mine_ctx["market"] == "All"
+    assert mine_ctx["items"] == []
+    assert mine_ctx["market"] == "Global"
 
 
 def test_ago_boundaries():

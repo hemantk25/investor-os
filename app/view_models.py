@@ -121,6 +121,10 @@ def watchlist_preview(base_dir, member: str | None, limit: int = 6) -> list[dict
 def watchlist_ctx(base_dir, member: str | None, q: str = "", market: str = "",
                   group: str = "", category: str = "", subcategory: str = "") -> dict:
     from app import watchlist as wmod
+    active_market = market if market in wmod.MARKETS else wmod.MARKETS[0]
+    all_lists = wmod.watchlists(base_dir, member=member)
+    lists_by_market = {m: [w for w in all_lists if w["market"] == m] for m in wmod.MARKETS}
+    active_lists = lists_by_market.get(active_market, [])
     items = wmod.with_quotes(base_dir, wmod.filtered(wmod.load(base_dir), q=q, market=market,
                                                      member=member, group=group,
                                                      category=category,
@@ -129,6 +133,7 @@ def watchlist_ctx(base_dir, member: str | None, q: str = "", market: str = "",
     for board in wmod.open_boards(base_dir):
         bitems = wmod.with_quotes(base_dir, wmod.board_items(base_dir, board, q=q))
         board = dict(board)
+        board["display_title"] = board.get("title") or board.get("list_name")
         board["items"] = bitems
         board["count"] = len(bitems)
         boards.append(board)
@@ -137,6 +142,8 @@ def watchlist_ctx(base_dir, member: str | None, q: str = "", market: str = "",
             "watch_subcategory": subcategory or "",
             "watch_markets": wmod.MARKETS, "watch_groups": wmod.GROUPS,
             "watch_categories": wmod.CATEGORIES, "watch_subcategories": wmod.SUBCATEGORIES,
+            "watchlists": all_lists, "lists_by_market": lists_by_market,
+            "active_market": active_market, "active_watchlists": active_lists,
             "boards": boards, "max_boards": wmod.MAX_OPEN_BOARDS, "count": len(items)}
 
 
@@ -248,19 +255,32 @@ def brief_ctx(base_dir, pf, pick: str | None, data_dir) -> dict:
     chosen = pick if pick in dates else (dates[0] if dates else None)
     sections: dict = {}
     if chosen:
-        raw_md = (briefs_dir / f"{chosen}.md").read_text(encoding="utf-8")
+        brief_path = briefs_dir / f"{chosen}.md"
+        raw_md = brief_path.read_text(encoding="utf-8")
         allowed = {item["url"] for item in nmod.load_items(data_dir, limit=5000)}
         sections = {key: bmod.sanitize_links(html, allowed)
                     for key, html in bmod.split_brief(raw_md).items()}
+        signals = bmod.load_future_signals(brief_path)
+    else:
+        signals = {"by_isin": {}, "by_name": {}}
     news_items = nmod.load_items(data_dir, within_hours=48, limit=50)
     impact = []
     for row in bmod.impact_rows(pf, news_items):
         row = dict(row)
+        signal = (signals["by_isin"].get(row.get("isin", ""))
+                  or signals["by_name"].get(row["name"].lower())
+                  or {"signal": "unknown", "reason": ""})
         row["name"] = row["name"].title()
         row["day_pct_fmt"] = pmod.fmt_pct(row["day_pct"])
         row["day_impact_fmt"] = pmod.fmt_short(row["day_impact"])
         row["value_fmt"] = pmod.fmt_short(row["value"])
         row["up"] = row["day_pct"] >= 0
+        row["future_signal"] = signal["signal"]
+        row["future_reason"] = signal.get("reason", "")
+        row["future_label"] = {"positive": "Positive", "negative": "Negative",
+                               "neutral": "Neutral"}.get(signal["signal"], "Unknown")
+        row["future_arrow"] = {"positive": "↑", "negative": "↓",
+                               "neutral": "→"}.get(signal["signal"], "—")
         impact.append(row)
     return {"dates": dates, "chosen": chosen, "sections": sections,
             "impact": impact, "has_brief": bool(chosen)}
@@ -382,9 +402,8 @@ def _ago(item: dict) -> str:
 
 def news_ctx(data_dir, market: str | None, mine: bool) -> dict:
     from app import news
-    chosen = market if market in news.MARKETS else "All"
-    load_market = chosen if chosen != "All" else None
-    raw_items = news.load_items(data_dir, market=load_market, mine=mine, limit=50)
+    chosen = market if market in news.MARKETS else news.MARKETS[0]
+    raw_items = news.load_items(data_dir, market=chosen, mine=mine, limit=50)
     items = [{"title": i["title"], "url": i["url"], "publisher": i.get("publisher") or "",
              "ago": _ago(i), "holding_name": i.get("holding_name")}
             for i in raw_items]
@@ -396,4 +415,4 @@ def news_ctx(data_dir, market: str | None, mine: bool) -> dict:
         except ValueError:
             fetched = fetched_raw
     return {"items": items, "market": chosen, "mine": mine,
-            "markets": ["All"] + news.MARKETS, "fetched": fetched}
+            "markets": news.MARKETS, "fetched": fetched}

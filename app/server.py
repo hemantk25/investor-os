@@ -136,7 +136,7 @@ def create_app() -> Flask:
     @app.route("/watchlist/boards", methods=["POST"])
     def watchlist_board_add():
         wmod.create_board(DATA, request.form)
-        return _redirect_watchlist(_member_form_arg())
+        return _redirect_watchlist(_member_form_arg(), request.form.get("market", ""))
 
     @app.route("/watchlist/boards/<int:board_id>/close", methods=["POST"])
     def watchlist_board_close(board_id):
@@ -154,7 +154,8 @@ def create_app() -> Flask:
                              "name": request.form.get("name", ""),
                              "market": market, "category": category,
                              "subcategory": subcategory, "group": group,
-                             "member": member})
+                             "member": member,
+                             "watchlist_id": request.form.get("watchlist_id")})
         return _redirect_watchlist(member, market, group, category=category, subcategory=subcategory)
 
     @app.route("/watchlist/items/<item_id>/delete", methods=["POST"])
@@ -174,11 +175,12 @@ def create_app() -> Flask:
         group = request.form.get("group") or request.form.get("subcategory") or "Custom"
         category = request.form.get("category", "Custom")
         subcategory = request.form.get("subcategory", group)
+        watchlist_id = request.form.get("watchlist_id")
         text = request.form.get("symbols", "")
         file = request.files.get("file")
         if file and file.filename:
             text = file.read().decode("utf-8", "ignore")
-        wmod.import_text(DATA, text, market, group, member, category, subcategory)
+        wmod.import_text(DATA, text, market, group, member, category, subcategory, watchlist_id)
         return _redirect_watchlist(member, market, group, category=category, subcategory=subcategory)
 
     @app.route("/watchlist/export")
@@ -188,12 +190,36 @@ def create_app() -> Flask:
         group = request.args.get("group", "")
         category = request.args.get("category", "")
         subcategory = request.args.get("subcategory", "")
+        watchlist_id = request.args.get("watchlist_id")
         q = request.args.get("q", "")
         items = wmod.filtered(wmod.load(DATA), q=q, market=market, member=member, group=group,
-                              category=category, subcategory=subcategory)
+                              category=category, subcategory=subcategory,
+                              watchlist_id=watchlist_id)
         body = wmod.export_text(items)
         return Response(body, mimetype="text/plain",
                         headers={"Content-Disposition": "attachment; filename=watchlist.txt"})
+
+    @app.route("/watchlist/lists", methods=["POST"])
+    def watchlist_list_add():
+        member = _member_form_arg()
+        market = request.form.get("market", "India")
+        wmod.create_watchlist(DATA, {"name": request.form.get("name", ""),
+                                     "market": market, "member": member})
+        return _redirect_watchlist(member, market)
+
+    @app.route("/watchlist/lists/<int:list_id>/rename", methods=["POST"])
+    def watchlist_list_rename(list_id):
+        wmod.rename_watchlist(DATA, str(list_id), request.form.get("name", ""))
+        wl = wmod.get_watchlist(DATA, list_id)
+        return _redirect_watchlist(wl["member"] if wl else _member_form_arg(),
+                                   wl["market"] if wl else "")
+
+    @app.route("/watchlist/lists/<int:list_id>/delete", methods=["POST"])
+    def watchlist_list_delete(list_id):
+        wl = wmod.get_watchlist(DATA, list_id)
+        wmod.delete_watchlist(DATA, str(list_id))
+        return _redirect_watchlist(wl["member"] if wl else _member_form_arg(),
+                                   wl["market"] if wl else "")
 
     @app.route("/refresh", methods=["POST"])
     def refresh_now():

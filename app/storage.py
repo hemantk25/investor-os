@@ -63,6 +63,7 @@ def init_db(con: sqlite3.Connection) -> None:
 
         CREATE TABLE IF NOT EXISTS watchlist_boards (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
+          watchlist_id INTEGER,
           title TEXT NOT NULL,
           market TEXT NOT NULL,
           category TEXT NOT NULL,
@@ -76,12 +77,23 @@ def init_db(con: sqlite3.Connection) -> None:
 
         CREATE TABLE IF NOT EXISTS watchlist_items (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
+          watchlist_id INTEGER,
           symbol TEXT NOT NULL,
           name TEXT NOT NULL,
           market TEXT NOT NULL,
           category TEXT NOT NULL,
           subcategory TEXT NOT NULL,
           member TEXT NOT NULL DEFAULT 'All',
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS watchlists (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          market TEXT NOT NULL,
+          member TEXT NOT NULL DEFAULT 'All',
+          sort_order INTEGER NOT NULL DEFAULT 0,
           created_at TEXT NOT NULL,
           updated_at TEXT NOT NULL
         );
@@ -107,6 +119,7 @@ def init_db(con: sqlite3.Connection) -> None:
           title TEXT NOT NULL, url TEXT NOT NULL,
           publisher TEXT, published_at TEXT,
           market TEXT NOT NULL,
+          markets TEXT,
           isin TEXT,
           holding_name TEXT,
           fetched_at TEXT NOT NULL
@@ -118,7 +131,16 @@ def init_db(con: sqlite3.Connection) -> None:
         );
         """
     )
+    _ensure_column(con, "watchlist_boards", "watchlist_id", "INTEGER")
+    _ensure_column(con, "watchlist_items", "watchlist_id", "INTEGER")
+    _ensure_column(con, "news_items", "markets", "TEXT")
     con.commit()
+
+
+def _ensure_column(con: sqlite3.Connection, table: str, column: str, declaration: str) -> None:
+    cols = {row[1] for row in con.execute(f"PRAGMA table_info({table})").fetchall()}
+    if column not in cols:
+        con.execute(f"ALTER TABLE {table} ADD COLUMN {column} {declaration}")
 
 
 def get_state(base_dir: Path, key: str) -> str | None:
@@ -140,4 +162,3 @@ def set_state(base_dir: Path, key: str, value: str) -> None:
             (key, value, now),
         )
         con.commit()
-

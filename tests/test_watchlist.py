@@ -7,6 +7,8 @@ def test_default_watchlist_has_requested_markets(tmp_path):
     assert any(i["group"] == "Gift Nifty" for i in items)
     assert any(i["market"] == "UAE" for i in items)
     assert any(i["market"] == "Canada" for i in items)
+    lists = wmod.watchlists(tmp_path)
+    assert any(w["name"] == "NSE Key Indices" and w["market"] == "India" for w in lists)
 
 
 def test_filter_member_keeps_family_items(tmp_path):
@@ -19,10 +21,12 @@ def test_filter_member_keeps_family_items(tmp_path):
 
 
 def test_tradingview_text_roundtrip(tmp_path):
+    watchlist_id = wmod.create_watchlist(tmp_path, {"name": "US Tech", "market": "US"})
     count = wmod.import_text(tmp_path, "NASDAQ:AAPL, NSE:RELIANCE\nDFM:DFMGI",
-                             market="Global", group="Custom", member="All")
+                             market="Global", group="Custom", member="All",
+                             watchlist_id=watchlist_id)
     assert count == 3
-    custom = wmod.filtered(wmod.load(tmp_path), group="Custom")
+    custom = wmod.filtered(wmod.load(tmp_path), watchlist_id=watchlist_id)
     exported = wmod.export_text(custom)
     assert "NASDAQ:AAPL" in exported
     assert "NSE:RELIANCE" in exported
@@ -41,6 +45,15 @@ def test_open_boards_are_limited_and_closable(tmp_path):
     first = wmod.open_boards(tmp_path)[0]
     wmod.close_board(tmp_path, str(first["id"]))
     assert all(b["id"] != first["id"] for b in wmod.open_boards(tmp_path))
+
+
+def test_named_watchlist_opens_once_by_id(tmp_path):
+    watchlist_id = wmod.create_watchlist(tmp_path, {"name": "Banks", "market": "India"})
+    first = wmod.create_board(tmp_path, {"watchlist_id": watchlist_id})
+    second = wmod.create_board(tmp_path, {"watchlist_id": watchlist_id})
+    assert first == second
+    board = next(b for b in wmod.open_boards(tmp_path) if b["id"] == first)
+    assert board["watchlist_id"] == watchlist_id
 
 
 def test_quote_snapshots_enrich_items(tmp_path):

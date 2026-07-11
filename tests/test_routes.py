@@ -161,6 +161,30 @@ def test_watchlist_board_open_and_close(client):
     assert b"US Tech" not in r.data
 
 
+def test_watchlist_named_list_route_flow(client):
+    r = client.post("/watchlist/lists", data={"name": "Momentum", "market": "India",
+                                              "member": "All"},
+                    follow_redirects=True)
+    assert r.status_code == 200
+    assert b"Momentum" in r.data
+
+    from app import watchlist as wmod
+    watchlist_id = next(w["id"] for w in wmod.watchlists(client.data_dir)
+                        if w["name"] == "Momentum")
+    r = client.post("/watchlist/items", data={"watchlist_id": str(watchlist_id),
+                                              "symbol": "NSE:TCS",
+                                              "name": "TCS",
+                                              "member": "All"},
+                    follow_redirects=True)
+    assert r.status_code == 200
+    assert b"NSE:TCS" in r.data
+
+    r = client.post("/watchlist/boards", data={"watchlist_id": str(watchlist_id)},
+                    follow_redirects=True)
+    assert r.status_code == 200
+    assert b"Momentum" in r.data
+
+
 def test_rebalance_tabs(client):
     for tab in ("exits", "buys", "schedule"):
         r = client.get(f"/rebalance?tab={tab}")
@@ -173,6 +197,26 @@ def test_brief_and_profile(client):
     assert client.get("/profile").status_code == 200
 
 
+def test_brief_impact_columns(client):
+    from app import storage
+    with storage.connect(client.data_dir) as con:
+        con.execute(
+            """
+            INSERT INTO news_items(url_hash, title, url, publisher, published_at, market,
+                                    markets, isin, holding_name, fetched_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            ("impact", "Alpha earnings boost", "https://example.com/impact",
+             "Mint", None, "India", '["India"]', "INE001A01001",
+             "Alpha Motors", storage.now_iso()),
+        )
+        con.commit()
+    r = client.get("/brief")
+    assert r.status_code == 200
+    for label in (b"Daily Gains", b"Value Change", b"Holdings Value", b"Future Impact"):
+        assert label in r.data
+
+
 def test_brief_generate_redirects(client):
     r = client.post("/brief/generate")
     assert r.status_code in (302, 303)
@@ -181,8 +225,10 @@ def test_brief_generate_redirects(client):
 def test_news_page_lists_markets(client):
     r = client.get("/news")
     assert r.status_code == 200
-    for m in ("India", "US", "UAE", "Canada", "Global"):
-        assert m.encode() in r.data
+    html = r.data.decode()
+    for m in ("Global", "India", "US", "UAE", "Canada"):
+        assert f"/news?market={m}" in html
+    assert html.index("/news?market=Global") < html.index("/news?market=India")
 
 
 def test_news_page_market_filter(client):

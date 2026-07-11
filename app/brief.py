@@ -10,6 +10,8 @@ from pathlib import Path
 NEWS_CAP = 30
 _SECTION_TOKENS = [("MARKET BRIEF", "market_brief"), ("MY STOCKS", "my_stocks"),
                    ("IMPACT NOTES", "impact_notes")]
+_SIGNALS_HEADING = "FUTURE IMPACT SIGNALS"
+SIGNALS = {"positive", "negative", "neutral"}
 
 
 class BriefError(Exception):
@@ -77,6 +79,9 @@ markdown link to the source for each story, citing ONLY urls listed in the NEWS 
 in the NEWS block above.
 ## IMPACT NOTES — 2-3 lines interpreting the measured day moves already present in the
 CURRENT PORTFOLIO data above. Do NOT invent numbers; use ONLY the day_pct/value figures given.
+## FUTURE IMPACT SIGNALS — output ONLY a JSON array in a fenced json block. Each item must be
+{{"isin":"...", "name":"...", "signal":"positive|negative|neutral", "reason":"5-10 words"}}.
+Use only stocks present in CURRENT PORTFOLIO and only the three signal values.
 Direct, no fluff, no disclaimers beyond one line. All amounts in ₹ lakh/crore format. Cite
 ONLY the urls listed in the NEWS block — never fabricate a link."""
 
@@ -98,6 +103,86 @@ def split_brief(md_text: str) -> dict:
     if not sections:
         return {"single": md.markdown(md_text, extensions=["extra"])}
     return sections
+
+
+def _signals_body(md_text: str) -> str:
+    matches = list(re.finditer(r"^##\s+(.+?)\s*$", md_text, flags=re.MULTILINE))
+    for i, m in enumerate(matches):
+        if _SIGNALS_HEADING in m.group(1).strip().upper():
+            start = m.end()
+            end = matches[i + 1].start() if i + 1 < len(matches) else len(md_text)
+            return md_text[start:end].strip()
+    return ""
+
+
+def _normalise_signal(row: dict) -> dict | None:
+    signal = str(row.get("signal") or row.get("future_impact") or "").strip().lower()
+    if signal not in SIGNALS:
+        signal = "neutral"
+    isin = str(row.get("isin") or "").strip().upper()
+    name = str(row.get("name") or row.get("holding") or "").strip()
+    if not isin and not name:
+        return None
+    reason = str(row.get("reason") or "").strip()
+    return {"isin": isin, "name": name, "signal": signal, "reason": reason[:160]}
+
+
+def parse_future_signals(md_text: str) -> list[dict]:
+    body = _signals_body(md_text)
+    if not body:
+        return []
+    fenced = re.search(r"```(?:json)?\s*(.*?)```", body, flags=re.DOTALL | re.IGNORECASE)
+    raw = fenced.group(1).strip() if fenced else body.strip()
+    try:
+        parsed = json.loads(raw)
+    except json.JSONDecodeError:
+        return []
+    rows = parsed.get("future_impact", parsed.get("signals", [])) if isinstance(parsed, dict) else parsed
+    if not isinstance(rows, list):
+        return []
+    out = []
+    for row in rows:
+        if isinstance(row, dict):
+            norm = _normalise_signal(row)
+            if norm:
+                out.append(norm)
+    return out
+
+
+def signal_sidecar_path(brief_path: Path) -> Path:
+    return brief_path.with_name(f"{brief_path.stem}.signals.json")
+
+
+def save_future_signals(brief_path: Path, md_text: str) -> Path | None:
+    signals = parse_future_signals(md_text)
+    if not signals:
+        return None
+    path = signal_sidecar_path(brief_path)
+    path.write_text(json.dumps(signals, indent=2), encoding="utf-8")
+    return path
+
+
+def load_future_signals(brief_path: Path) -> dict:
+    path = signal_sidecar_path(brief_path)
+    if not path.exists():
+        return {"by_isin": {}, "by_name": {}}
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return {"by_isin": {}, "by_name": {}}
+    rows = raw if isinstance(raw, list) else raw.get("future_impact", [])
+    by_isin, by_name = {}, {}
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        norm = _normalise_signal(row)
+        if not norm:
+            continue
+        if norm["isin"]:
+            by_isin[norm["isin"]] = norm
+        if norm["name"]:
+            by_name[norm["name"].lower()] = norm
+    return {"by_isin": by_isin, "by_name": by_name}
 
 
 def sanitize_links(html: str, allowed) -> str:
@@ -130,7 +215,7 @@ def impact_rows(pf, news_items: list[dict] | None) -> list[dict]:
         value = c.value
         day_impact = value - value / (1 + c.day_pct / 100)
         rows.append({
-            "name": c.name, "headline": item.get("title"), "url": item.get("url"),
+            "isin": isin, "name": c.name, "headline": item.get("title"), "url": item.get("url"),
             "publisher": item.get("publisher"), "day_pct": c.day_pct,
             "day_impact": day_impact, "value": value,
         })
@@ -157,11 +242,21 @@ def generate_brief(pf, base_dir: Path, data_dir: Path) -> Path:
     except subprocess.TimeoutExpired:
         raise BriefError("Brief generation timed out after 5 minutes. Try again, or generate "
                          "it in Claude Cowork instead.")
-    if out.returncode != 0 or not (out.stdout or "").strip():
-        raise BriefError(f"Claude CLI error: {(out.stderr or 'no output').strip()[:300]} — "
-                         "check you are logged in (`claude` then /login).")
+    stdout = (out.stdout or "").strip()
+    stderr = (out.stderr or "").strip()
+    if out.returncode != 0:
+        detail = (stderr or stdout or f"exit code {out.returncode}")[:500]
+        raise BriefError("Claude CLI failed. Try `claude -p \"Say OK\"` in this folder; "
+                         "if it asks for setup, run `claude` then /login. "
+                         f"Details: {detail}")
+    if not stdout:
+        detail = stderr[:500] if stderr else "no stderr"
+        raise BriefError("Claude CLI returned no output. Test it with `claude -p \"Say OK\"`; "
+                         "if it asks for setup, run `claude` then /login. If it reports a "
+                         f"usage limit, wait and retry. Details: {detail}")
     briefs = base_dir / "briefs"
     briefs.mkdir(exist_ok=True)
     path = briefs / f"{date.today().isoformat()}.md"
-    path.write_text(out.stdout, encoding="utf-8")
+    path.write_text(stdout, encoding="utf-8")
+    save_future_signals(path, stdout)
     return path

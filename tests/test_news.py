@@ -26,6 +26,7 @@ def test_normalize_entries():
     assert first["publisher"] == "Mint"
     assert first["published_at"] == datetime(2026, 7, 7, 4, 0, 0).isoformat()
     assert first["market"] == "India"
+    assert "India" in first["markets"]
     assert first["isin"] == "INE002A01018"
     assert first["holding_name"] == "Reliance Industries"
     # second/third entries have no <source> or <pubDate>
@@ -41,6 +42,22 @@ def test_save_dedupes_by_url(tmp_path):
 
     inserted_again = news.save_items(tmp_path, items)
     assert inserted_again == 0
+
+
+def test_save_merges_market_tags_for_duplicate_url(tmp_path):
+    items = [
+        {"title": "Oil shock hits India and Wall Street", "url": "https://example.com/oil",
+         "publisher": "Reuters", "published_at": None, "market": "Global",
+         "markets": ["Global", "India"], "isin": None, "holding_name": None},
+        {"title": "Oil shock hits India and Wall Street", "url": "https://example.com/oil",
+         "publisher": "Reuters", "published_at": None, "market": "US",
+         "markets": ["US"], "isin": None, "holding_name": None},
+    ]
+    assert news.save_items(tmp_path, [items[0]]) == 1
+    assert news.save_items(tmp_path, [items[1]]) == 0
+    assert news.load_items(tmp_path, market="Global")
+    assert news.load_items(tmp_path, market="India")
+    assert news.load_items(tmp_path, market="US")
 
 
 def test_load_filters(tmp_path):
@@ -134,6 +151,7 @@ def test_prune_keeps_recent(tmp_path):
 def test_feed_urls():
     us_url = news.market_feed_url("US")
     assert "gl=US" in us_url
+    assert "site%3Acnbc.com" in us_url or "site%3ACNBC" in us_url
 
     holding_url = news.holding_feed_url("Tata Power")
     assert "%22Tata+Power%22" in holding_url

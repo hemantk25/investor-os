@@ -1,6 +1,8 @@
 from datetime import date
 from pathlib import Path
 
+import pytest
+
 import app.brief as brief
 from app.brief import build_prompt, find_claude, portfolio_snapshot
 from app.parser import parse_holdings
@@ -43,6 +45,8 @@ def test_prompt_includes_news_and_contract():
     assert "## MARKET BRIEF" in p
     assert "## MY STOCKS" in p
     assert "## IMPACT NOTES" in p
+    assert "## FUTURE IMPACT SIGNALS" in p
+    assert "positive|negative|neutral" in p
     assert NEWS_ITEM["url"] in p
     assert "ONLY" in p
 
@@ -50,6 +54,22 @@ def test_prompt_includes_news_and_contract():
 def test_find_claude_missing(monkeypatch):
     monkeypatch.setattr(brief.shutil, "which", lambda _: None)
     assert find_claude() is None
+
+
+def test_generate_brief_empty_stdout_has_diagnostic(tmp_path, monkeypatch):
+    class Result:
+        returncode = 0
+        stdout = ""
+        stderr = ""
+
+    monkeypatch.setattr(brief, "find_claude", lambda: "claude")
+    monkeypatch.setattr(brief.subprocess, "run", lambda *args, **kwargs: Result())
+
+    with pytest.raises(brief.BriefError) as exc:
+        brief.generate_brief(_pf(), tmp_path, tmp_path)
+
+    assert 'claude -p "Say OK"' in exc.value.message
+    assert "returned no output" in exc.value.message
 
 
 def test_split_brief_three_sections():
@@ -66,6 +86,25 @@ def test_split_brief_three_sections():
     assert "Nifty" in sections["market_brief"]
     assert "Alpha Motors" in sections["my_stocks"]
     assert "gained" in sections["impact_notes"]
+
+
+def test_parse_and_load_future_signals(tmp_path):
+    md_text = (
+        "## MARKET BRIEF\nMarkets.\n\n"
+        "## MY STOCKS\nAlpha.\n\n"
+        "## IMPACT NOTES\nMeasured impact.\n\n"
+        "## FUTURE IMPACT SIGNALS\n"
+        "```json\n"
+        "[{\"isin\":\"INE001A01001\",\"name\":\"Alpha Motors\",\"signal\":\"positive\",\"reason\":\"earnings momentum may continue\"}]\n"
+        "```\n"
+    )
+    signals = brief.parse_future_signals(md_text)
+    assert signals[0]["signal"] == "positive"
+    path = tmp_path / "2026-07-11.md"
+    path.write_text(md_text, encoding="utf-8")
+    assert brief.save_future_signals(path, md_text)
+    loaded = brief.load_future_signals(path)
+    assert loaded["by_isin"]["INE001A01001"]["reason"] == "earnings momentum may continue"
 
 
 def test_split_brief_legacy():
@@ -94,6 +133,7 @@ def test_impact_rows():
     assert row["day_pct"] == 2.0
     assert row["day_impact"] == c.value - c.value / (1 + c.day_pct / 100)
     assert row["value"] == c.value
+    assert row["isin"] == "INE001A01001"
     assert row["url"] == NEWS_ITEM["url"]
     assert row["headline"] == NEWS_ITEM["title"]
     assert row["publisher"] == NEWS_ITEM["publisher"]

@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from app import holdings_ledger as ledger
+from app import view_models as vm
 from app.parser import parse_holdings
 from app.portfolio import build_portfolio
 from app.prices import Quote
@@ -31,6 +32,34 @@ def test_manual_holding_layers_on_top_of_excel(tmp_path):
     assert eps.qty == 10
     assert eps.source == "manual"
     assert eps.value == 10 * 50
+
+
+def test_manual_suppressed_when_excel_has_same(tmp_path):
+    duplicate_id = ledger.add_manual(tmp_path, {"member": "PK", "name": "Alpha Manual",
+                                                "isin": "INE001A01001", "symbol": "ALPHAMOT",
+                                                "qty": "10", "avg_cost": "200"})
+    other_member_id = ledger.add_manual(tmp_path, {"member": "MK", "name": "Alpha Manual MK",
+                                                   "isin": "INE001A01001",
+                                                   "symbol": "ALPHAMOT",
+                                                   "qty": "7", "avg_cost": "210"})
+
+    pr = ledger.apply_events(parse_holdings(FIX), tmp_path)
+    pk_alpha = [h for h in pr.holdings if h.member == "PK" and h.isin == "INE001A01001"]
+    mk_alpha = [h for h in pr.holdings if h.member == "MK" and h.isin == "INE001A01001"]
+
+    assert len(pk_alpha) == 1
+    assert getattr(pk_alpha[0], "source", "excel") == "excel"
+    assert pk_alpha[0].qty == 100
+    assert len(mk_alpha) == 1
+    assert getattr(mk_alpha[0], "source", "") == "manual"
+    assert any("suppressed" in item for item in pr.skipped)
+    assert "MK" in pr.members
+
+    pf = build_portfolio(pr, {**ISIN, "INE001A01001": "ALPHAMOT"}, Q, [])
+    ctx = vm.holdings(pf, None, "", ledger.list_manual(tmp_path))
+    manual = {item["id"]: item for item in ctx["manual_items"]}
+    assert manual[duplicate_id]["in_excel"] is True
+    assert manual[other_member_id]["in_excel"] is False
 
 
 def test_sell_event_reduces_excel_quantity(tmp_path):

@@ -172,11 +172,21 @@ def _apply_sell(holdings: list, event: dict) -> list:
 
 
 def apply_events(pr: parser.ParseResult, base_dir: Path) -> parser.ParseResult:
-    holdings = list(pr.holdings) + _manual_holdings(base_dir)
+    excel_keys = {(h.isin, h.member) for h in pr.holdings}
+    holdings = list(pr.holdings)
+    skipped = list(pr.skipped)
+    for h in _manual_holdings(base_dir):
+        if (h.isin, h.member) in excel_keys:
+            skipped.append(
+                f"manual entry #{getattr(h, 'source_id', '?')} ({h.name}) suppressed "
+                "because it is now present in the ICICI Excel"
+            )
+            continue
+        holdings.append(h)
     for event in _sell_events(base_dir):
         holdings = _apply_sell(holdings, event)
     members = sorted(set(pr.members) | {h.member for h in holdings})
-    return parser.ParseResult(holdings=holdings, skipped=pr.skipped, asof=pr.asof,
+    return parser.ParseResult(holdings=holdings, skipped=skipped, asof=pr.asof,
                               members=members)
 
 
@@ -220,4 +230,3 @@ def snapshot_count(base_dir: Path) -> int:
     with storage.connect(base_dir) as con:
         row = con.execute("SELECT COUNT(*) AS n FROM portfolio_snapshots").fetchone()
         return int(row["n"] if row else 0)
-

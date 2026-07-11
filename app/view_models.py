@@ -143,6 +143,11 @@ def watchlist_ctx(base_dir, member: str | None, q: str = "", market: str = "",
 def holdings(pf, member, q: str, manual_items: list | None = None) -> dict:
     ql = (q or "").lower().strip()
     cls_by_isin = {p.isin: p.cls for p in pf.positions}
+    excel_keys = {
+        (p.isin, p.member)
+        for p in pf.positions
+        if getattr(p, "source", "excel") != "manual"
+    }
     source_by_isin = {}
     for p in pf.positions:
         if member is not None and p.member != member:
@@ -197,8 +202,15 @@ def holdings(pf, member, q: str, manual_items: list | None = None) -> dict:
         if group_rows:
             groups.append({"key": key, "title": title, "tag": tag, "rows": group_rows,
                            "subtotal": pmod.fmt_short(sub)})
+
+    annotated_manual = []
+    for item in manual_items or []:
+        row = dict(item)
+        row["in_excel"] = (row.get("isin"), row.get("member")) in excel_keys
+        annotated_manual.append(row)
+
     return {"groups": groups, "rows": rows, "q": q or "",
-            "manual_items": manual_items or [], "holdings_total": pmod.fmt_short(total_value),
+            "manual_items": annotated_manual, "holdings_total": pmod.fmt_short(total_value),
             "holdings_count": len(rows)}
 
 

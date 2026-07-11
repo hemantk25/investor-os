@@ -92,6 +92,16 @@ def test_goal_ctx_flat_fallback_when_no_snapshots(tmp_path):
     assert (tmp_path / "goal.json").exists()
 
 
+def test_goal_ctx_survives_corrupt_goal_json(tmp_path):
+    (tmp_path / "goal.json").write_text("not valid json {{{", encoding="utf-8")
+
+    pf = _pf()
+    ctx = vm.goal_ctx(pf, tmp_path)
+
+    assert ctx["goal_error"]
+    assert len(ctx["kpis"]) == 4
+
+
 def test_news_ctx_empty_defaults(tmp_path):
     from app import news
     ctx = vm.news_ctx(tmp_path, None, False)

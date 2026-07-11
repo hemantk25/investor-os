@@ -226,3 +226,9 @@ def test_goal_page(client):
     assert b"Goal" in r.data
     assert b"Required" in r.data
     assert (client.data_dir / "goal.json").exists()
+
+
+def test_goal_page_survives_corrupt_goal_json(client):
+    (client.data_dir / "goal.json").write_text("not valid json {{{", encoding="utf-8")
+    r = client.get("/goal")
+    assert r.status_code == 200

@@ -272,14 +272,21 @@ def goal_ctx(pf, data_dir) -> dict:
     if len(actual_values) < 2:
         actual_values = [current_total, current_total]
 
-    required_points = goal_mod.required_series(goal, today, points=len(actual_values))
-    required_values = [v for _, v in required_points]
+    # A corrupt/unparseable goal.json (or any other path that leaves baseline_date
+    # unset) means required_series/required_value cannot run — date.fromisoformat(None)
+    # would raise. Fall back to a flat required line so the page renders instead of 500ing.
+    if goal.get("baseline_date") is not None:
+        required_points = goal_mod.required_series(goal, today, points=len(actual_values))
+        required_values = [v for _, v in required_points]
+        required_today = goal_mod.required_value(goal, today)
+    else:
+        required_values = [current_total] * len(actual_values)
+        required_today = current_total
 
     chart = charts.dual_paths(actual_values, required_values)
     chart["legend"] = [{"label": "Actual", "color": charts.CHART_COLORS[0]},
                        {"label": "Required path", "color": "#64748b"}]
 
-    required_today = goal_mod.required_value(goal, today)
     diff = current_total - required_today
     diff_pct = (diff / required_today * 100) if required_today else 0.0
 
@@ -307,9 +314,11 @@ def goal_ctx(pf, data_dir) -> dict:
     meta = goal_mod.load_security_meta(data_dir)
     caps = goal_mod.classify_caps(pf.consolidated(), meta, goal)
     bands_pct = goal["bands_pct"]
+    default_bands_pct = goal_mod.DEFAULT_GOAL["bands_pct"]
     band_rows = [
         {"key": key, "label": label, "actual_pct": caps[key]["pct"],
-         "target_pct": bands_pct[key], "flag": key == "small" and caps["small_breach"]}
+         "target_pct": bands_pct.get(key, default_bands_pct[key]),
+         "flag": key == "small" and caps["small_breach"]}
         for key, label in [("large", "Large Cap"), ("mid", "Mid Cap"), ("small", "Small Cap")]
     ]
     unclassified_value = caps["unclassified"]["value"]

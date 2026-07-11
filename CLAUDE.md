@@ -8,6 +8,10 @@ for changes, do them end-to-end and verify before reporting done.
 - `data/holdings.xlsx` — weekly ICICI Direct export. Member sheets (PK/CK/NK/DK)
   are parsed by `app/parser.py` (ISIN is the key; symbols in the file are ICICI
   codes, NOT NSE tickers).
+- `app/holdings_ledger.py` stores dashboard-added holdings, edits, sell/reduce
+  events, and daily snapshots in the private SQLite DB. It layers these events
+  over the Excel import; if Excel later contains the same `(ISIN, member)`, the
+  Excel lot wins and the manual row is ignored in totals.
 - `app/mapping.py` maps ISIN → NSE symbol (cache `data/isin-map.csv`; manual fixes
   in `data/overrides.csv` — isin,symbol — which always win).
 - `app/prices.py` fetches live prices from Yahoo Finance (`SYMBOL.NS`). On any
@@ -17,17 +21,48 @@ for changes, do them end-to-end and verify before reporting done.
   with the prebuilt Tailwind CSS file at `app/static/app.css`.
 - `app/view_models.py` and `app/charts.py` turn portfolio/advisory data into
   template-ready dictionaries and inline SVG chart paths.
+- `app/storage.py` owns the private SQLite database at `data/investor_os.sqlite`
+  for holding events, portfolio snapshots, watchlists, quote snapshots, news,
+  security metadata, and app state.
+- `app/watchlist.py` manages the TradingView-style local watchlist workspace,
+  boards, filters, quotes, and TXT import/export. There is no direct TradingView
+  API dependency.
 - `data/advisory.xlsx` + `app/advisory.py` power the Rebalance view. Baseline
   quantities are frozen in `data/advisory-baseline.json` (delete it to re-baseline).
   Manual status overrides: `data/rebalance-status.json` e.g. {"Oravel Stays (OYO)": "DONE"}.
+- `app/news.py` fetches market and portfolio-related news from Google News RSS
+  and Yahoo Finance feeds, normalizes/dedupes links, and stores them in SQLite.
+- `app/goal.py` powers the Goal page: required path, implied CAGR, market-cap
+  bands, compliance checks, and security metadata refresh.
 - `app/brief.py` generates the morning brief by running `claude -p` (the owner's
-  Claude subscription). Briefs land in `briefs/YYYY-MM-DD.md`.
+  Claude subscription). Briefs land in `briefs/YYYY-MM-DD.md`; current briefs
+  are split into Market Brief, My Stocks, and Impact Notes with a Python-computed
+  impact table.
+- `app/refresh.py` is the local refresh entrypoint. `python -m app.refresh`
+  updates watchlist quotes, portfolio snapshots, security metadata, news, and
+  `last_refresh` state.
+- `data/goal.json` is the editable goal config. Defaults are seeded on first
+  Goal-page visit: target value, target date, expected CAGR, monthly SIP,
+  large/mid/small band targets, and small-cap max.
 - `profile/one-pager.md` — the owner's investor profile. Injected into every brief.
 - Run tests with: `python -m pytest` (fixtures are fake data in tests/fixtures/).
+
+Visible side-nav pages are: Overview, Holdings, Watchlist, Morning Brief, News,
+Rebalance, and Goal. `/profile` still exists and is linked from Goal/Brief, but
+it is intentionally not in the side nav.
 
 ## Weekly ritual (owner does this)
 Download holdings Excel from ICICI Direct → replace `data/holdings.xlsx` → open
 the dashboard (Start Dashboard.command).
+
+## Local refresh
+Use the Overview or Watchlist refresh button, the News page's **Refresh news**
+button, or run:
+
+`python -m app.refresh`
+
+This is the same command a future Windows Task Scheduler job should call. It is
+manual/local for now; there is no always-on service.
 
 ## Maintenance playbook — likely requests and what to do
 - "Dashboard won't start" → run `./setup.sh`, then `Start Dashboard.command`;
@@ -47,9 +82,24 @@ the dashboard (Start Dashboard.command).
   `app/parser.py`; run `python -m pytest tests/test_parser.py` before finishing.
 - "Add a family member" → nothing to do; any new member sheet in the Excel is
   picked up automatically.
+- "Add/edit/sell a holding" → use the Holdings page UI. Manual changes are stored
+  in SQLite and never rewrite `data/holdings.xlsx`.
+- "A manual holding is duplicated after the weekly Excel update" → expected: the
+  Excel lot wins; the manual sidebar shows `in Excel now` and that row is ignored
+  in totals. The owner can remove the manual row after confirming the Excel file.
 - "Add gold/FD/MF" → edit `data/extras.json`:
   [{"member":"PK","label":"SGB 2022","asset_class":"gold","value":500000,"invested":400000}]
+- "Change watchlists" → use `/watchlist`; items/boards live in SQLite. TXT
+  import/export is TradingView-compatible comma-separated symbols such as
+  `NSE:RELIANCE,NASDAQ:MSFT`.
+- "News feels stale" → click **Refresh news** on `/news`, or run
+  `python -m app.refresh`. News is fetched and stored locally; page loads do not
+  need to refetch.
 - "Change the brief style" → edit build_prompt in `app/brief.py`.
+- "Change the goal target/date/bands" → edit `data/goal.json`. If it is corrupt,
+  the Goal page renders with defaults and shows a friendly warning.
+- "Goal market-cap bands are unclassified" → run `python -m app.refresh` so
+  security metadata can fill from Yahoo Finance; some unavailable rows are normal.
 - "Mark an exit as done" → `data/rebalance-status.json`.
-- NEVER commit anything in data/, briefs/, profile/ — real financial data; the
-  GitHub repo is public.
+- NEVER commit anything in `data/`, `briefs/`, or `profile/` — real financial
+  data; the GitHub repo is public.

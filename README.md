@@ -1,19 +1,26 @@
-# Investor OS — Demo Package for Paresh Karia
+# Investor OS — Local Investment Dashboard for Paresh Karia
 
 An AI-powered personal investment system, modelled on the "AI Financial
-Advisor" architecture (AI Edge, https://youtu.be/VvuHr46wF-4). This repo is
-**Phase 1: the demo/pitch package** — everything here uses fictional sample
-data.
+Advisor" architecture (AI Edge, https://youtu.be/VvuHr46wF-4). This repo now
+contains both the original offline demo package and the Phase 3 local-first
+dashboard used with real private data on the owner's machine.
 
 ## What's in here
 
 | File | What it is |
 |---|---|
+| `app/` | Real Flask/Jinja/Tailwind dashboard |
+| `data/` | Private local financial data folder, gitignored |
+| `briefs/` | Locally generated morning briefs, gitignored |
+| `profile/` | Owner profile/rules, gitignored |
 | `demo/investor-os-dashboard.html` | Interactive dashboard mockup — double-click to open, works offline |
 | `prompts/investor-interview-prompt.md` | Paste into Claude/ChatGPT → AI interviews Sir → produces his investor one-pager |
 | `prompts/investor-os-builder-prompt.md` | For Phase 2: builds the full memory folder in Claude Cowork/Code |
 | `prompts/sample-investor-one-pager.md` | Filled fictional example of what the interview produces |
 | `docs/superpowers/specs/` · `docs/superpowers/plans/` | Design spec and implementation plan |
+
+Private financial files are intentionally not committed. Tests use fake fixture
+data from `tests/fixtures/`.
 
 Tip: the dashboard supports deep links — open it with `#view-brief`,
 `#view-alerts`, etc. to land on a specific view, or `#selftest` to see the
@@ -43,10 +50,31 @@ data-consistency checks pass.
   his real one-pager + instructions.md + memory.md + financials/.
 - **Phase 3 (in progress, `phase3-dashboard` branch):** the real local-first
   dashboard — Flask + Stitch-style Jinja/Tailwind UI, yfinance, ICICI Excel
-  ingestion, member switcher, rebalance tracker, morning briefs via Claude Code. See
+  ingestion, SQLite event ledger, editable holdings, watchlist workspace, news,
+  rebalance tracker, goal tracker, and morning briefs via Claude Code. See
   "Running the real dashboard" below.
 - **Phase 4:** Telegram bot (BotFather), scheduled 7 AM morning brief,
   price/news alerts, weekly newsletter.
+
+## Current dashboard features
+
+- **Overview:** market pulse, portfolio KPI cards, asset-class and family split
+  visuals, top movers, and watchlist preview.
+- **Holdings:** searchable brokerage-style holdings page with manual add/edit,
+  sell/reduce events, source badges, and Excel-vs-manual dedupe.
+- **Watchlist:** TradingView-inspired multi-board workspace with country,
+  category, subcategory, holder filters, latest quote snapshots, and
+  TradingView TXT import/export.
+- **Morning Brief:** local Claude CLI generation with Market Brief, My Stocks,
+  Impact Notes, and a measured portfolio-impact table.
+- **News:** local news store populated from Google News RSS/Yahoo feeds, with
+  market tabs and portfolio-news filtering.
+- **Rebalance:** advisory exits/buys/schedule tracking from the ICICI advisory
+  workbook plus local status overrides.
+- **Goal:** target-path tracker using `data/goal.json`, portfolio snapshots,
+  implied CAGR, market-cap bands, and compliance checks.
+- **Profile:** `/profile` renders the owner one-pager used by briefs; it is
+  intentionally linked from other pages rather than shown in the side nav.
 
 ## Running the real dashboard (Phase 3)
 
@@ -67,13 +95,21 @@ gitignored and never leave it).
    (and the advisory report into `data/advisory.xlsx`).
 2. macOS: double-click **Start Dashboard.command**. Windows: `./start-dashboard.ps1`.
 3. The browser opens at http://127.0.0.1:8555.
+4. Optional refresh from the UI, or run `python -m app.refresh` to update
+   watchlist quote snapshots, portfolio snapshots, news, security metadata, and
+   last-refresh state.
 
 CSS is prebuilt and committed in `app/static/app.css`. Only rebuild it after
 changing Tailwind classes in templates.
 
+Manual dashboard edits do not rewrite the Excel file. They are stored in the
+private SQLite DB at `data/investor_os.sqlite` and layered over the ICICI import.
+If the weekly Excel later includes the same `(ISIN, member)` as a manual row,
+the Excel lot wins and the manual row is ignored in totals.
+
 The one-page owner guide is `README-SIR.md`; the maintenance playbook for
 Claude Code is `CLAUDE.md`. Design and build detail:
-`docs/superpowers/specs/2026-07-07-*` and `docs/superpowers/plans/2026-07-07-*`.
+`docs/superpowers/specs/` and `docs/superpowers/plans/`.
 
 ## Notes
 

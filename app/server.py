@@ -8,7 +8,6 @@ from app import portfolio as pmod
 from app import view_models as vm
 from app import charts
 from app import watchlist as wmod
-from app import holdings_ledger as hledger
 
 BASE = Path(__file__).resolve().parent.parent
 DATA = Path(os.environ.get("INVESTOR_OS_DATA", str(BASE / "data")))
@@ -16,13 +15,10 @@ HOLDINGS = DATA / "holdings.xlsx"
 
 
 def load_portfolio():
-    if not HOLDINGS.exists() and not hledger.has_manual_holdings(DATA):
+    if not HOLDINGS.exists():
         return None
-    pr = parser.parse_holdings(HOLDINGS) if HOLDINGS.exists() else hledger.empty_parse_result(DATA)
-    if HOLDINGS.exists():
-        pr = hledger.apply_events(pr, DATA)
+    pr = parser.parse_holdings(HOLDINGS)
     isin_map = mapping.ensure_map(DATA)
-    isin_map.update(hledger.symbol_map(DATA))
     quotes = prices.fetch_quotes([isin_map.get(h.isin) for h in pr.holdings if isin_map.get(h.isin)])
     extras = pmod.load_extras(DATA / "extras.json")
     return pmod.build_portfolio(pr, isin_map, quotes, extras)
@@ -88,7 +84,7 @@ def create_app() -> Flask:
         if pf is None:
             return render_template("holdings.html", **_empty("holdings", "Holdings"))
         member = _member_arg()
-        ctx = vm.holdings(pf, member, request.args.get("q", ""), hledger.list_manual(DATA))
+        ctx = vm.holdings(pf, member, request.args.get("q", ""))
         ctx.update(vm.common(pf, "holdings", member))
         ctx["page"] = "Holdings"
         ctx["empty"] = False
@@ -96,24 +92,23 @@ def create_app() -> Flask:
 
     @app.route("/holdings/manual", methods=["POST"])
     def holdings_manual_add():
-        hledger.add_manual(DATA, request.form)
-        return redirect(url_for("holdings", member=request.form.get("member") or "All"))
+        return Response("Manual holdings are disabled. Replace data/holdings.xlsx instead.",
+                        status=410)
 
     @app.route("/holdings/manual/<int:item_id>/edit", methods=["POST"])
     def holdings_manual_edit(item_id):
-        hledger.edit_manual(DATA, item_id, request.form)
-        return redirect(url_for("holdings", member=request.form.get("member") or "All"))
+        return Response("Manual holdings are disabled. Replace data/holdings.xlsx instead.",
+                        status=410)
 
     @app.route("/holdings/manual/<int:item_id>/delete", methods=["POST"])
     def holdings_manual_delete(item_id):
-        hledger.delete_manual(DATA, item_id)
-        return redirect(url_for("holdings"))
+        return Response("Manual holdings are disabled. Replace data/holdings.xlsx instead.",
+                        status=410)
 
     @app.route("/holdings/events/sell", methods=["POST"])
     def holdings_sell():
-        hledger.add_sell(DATA, request.form)
-        member = request.form.get("member") or "All"
-        return redirect(url_for("holdings", member=member))
+        return Response("Sell/reduce actions are disabled. Replace data/holdings.xlsx instead.",
+                        status=410)
 
     @app.route("/watchlist")
     def watchlist_page():

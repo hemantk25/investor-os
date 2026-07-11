@@ -44,12 +44,21 @@ def test_overview_ok(client):
     assert r.status_code == 200
     assert b"Market Pulse" in r.data
     assert b"Nifty 50" in r.data
+    assert b"unavailable" in r.data
     assert b"Current Value" in r.data
     assert b"Portfolio Value" not in r.data
     assert b"Portfolio Summary" in r.data
     assert b"Asset-Class Split" in r.data
     assert b"Family Split" in r.data
     assert b"Watchlist" in r.data
+
+
+def test_sidebar_can_collapse(client):
+    html = client.get("/").data.decode()
+    assert "sidebarToggle" in html
+    assert "investor_os_sidebar_collapsed" in html
+    assert "sidebar-collapsed" in html
+    assert 'title="Overview"' in html
 
 
 def test_overview_empty_data(monkeypatch, tmp_path):
@@ -71,40 +80,62 @@ def test_holdings_and_search(client):
     r = client.get("/holdings")
     assert r.status_code == 200
     assert b"Portfolio Holdings" in r.data
+    assert b"Current Price" in r.data
+    assert b"Add Holding" not in r.data
+    assert b"Reduce" not in r.data
     r = client.get("/holdings?q=alpha")
     assert r.status_code == 200
     assert b"Alpha Motors" in r.data
 
 
-def test_holdings_manual_and_sell_routes(client):
+def test_holdings_manual_and_sell_routes_disabled(client):
+    from app import holdings_ledger as ledger
+
     r = client.post("/holdings/manual", data={"member": "PK",
                                               "name": "Epsilon Tech",
                                               "isin": "INE005E01011",
                                               "symbol": "EPSILON",
                                               "qty": "10",
                                               "avg_cost": "40",
-                                              "price": "45"},
-                    follow_redirects=True)
-    assert r.status_code == 200
-    assert b"Epsilon Tech" in r.data
-
-    from app import holdings_ledger as ledger
-    item = ledger.list_manual(client.data_dir)[0]
-    r = client.post(f"/holdings/manual/{item['id']}/edit",
-                    data={"member": "CK", "name": "Epsilon Tech",
-                          "isin": "INE005E01011", "symbol": "EPSILON",
-                          "qty": "12", "avg_cost": "41", "price": "46"},
-                    follow_redirects=True)
-    assert r.status_code == 200
+                                              "price": "45"})
+    assert r.status_code == 410
+    assert ledger.list_manual(client.data_dir) == []
 
     r = client.post("/holdings/events/sell", data={"member": "PK",
                                                    "isin": "INE001A01001",
-                                                   "qty": "5"},
-                    follow_redirects=True)
-    assert r.status_code == 200
+                                                   "qty": "5"})
+    assert r.status_code == 410
 
-    r = client.post(f"/holdings/manual/{item['id']}/delete", follow_redirects=True)
+
+def test_holdings_ignores_legacy_manual_events(client):
+    from app import holdings_ledger as ledger
+    import app.server as srv
+
+    ledger.add_manual(client.data_dir, {"member": "PK", "name": "Epsilon Tech",
+                                        "isin": "INE005E01011", "symbol": "EPSILON",
+                                        "qty": "10", "avg_cost": "40", "price": "45"})
+    ledger.add_sell(client.data_dir, {"member": "PK", "isin": "INE001A01001", "qty": "25"})
+
+    r = client.get("/holdings")
     assert r.status_code == 200
+    assert b"Epsilon Tech" not in r.data
+    pf = srv.load_portfolio()
+    alpha = next(c for c in pf.consolidated("PK") if c.isin == "INE001A01001")
+    assert alpha.qty == 100
+
+
+def test_empty_holdings_even_with_legacy_manual_events(monkeypatch, tmp_path):
+    from app import holdings_ledger as ledger
+
+    ledger.add_manual(tmp_path, {"member": "PK", "name": "Epsilon Tech",
+                                 "isin": "INE005E01011", "symbol": "EPSILON",
+                                 "qty": "10"})
+    monkeypatch.setenv("INVESTOR_OS_DATA", str(tmp_path))
+    import app.server as srv
+    srv = importlib.reload(srv)
+    r = srv.create_app().test_client().get("/holdings")
+    assert r.status_code == 200
+    assert b"No holdings file found" in r.data
 
 
 def test_watchlist_filters_and_preview(client):

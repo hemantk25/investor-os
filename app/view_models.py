@@ -170,6 +170,9 @@ def holdings(pf, member, q: str, manual_items: list | None = None) -> dict:
         source = "Mixed" if len(sources) > 1 else ("Manual" if "manual" in sources else "ICICI")
         rows.append({"name": c.name.title(), "isin": c.isin, "nse": c.nse_symbol or "",
                      "qty": c.qty, "avg": c.avg_cost, "price": c.price,
+                     "qty_fmt": f"{c.qty:,.2f}",
+                     "avg_fmt": (pmod.fmt_inr(c.avg_cost) if c.avg_cost is not None else "cost missing"),
+                     "price_fmt": (pmod.fmt_inr(c.price) if c.price is not None else "--"),
                      "value": pmod.fmt_short(c.value), "value_num": c.value,
                      "pl": (pmod.fmt_pct(c.pl_pct) if c.pl_pct is not None else "—"),
                      "pl_up": (c.pl_pct or 0) >= 0, "pl_known": c.pl_pct is not None,
@@ -188,24 +191,6 @@ def holdings(pf, member, q: str, manual_items: list | None = None) -> dict:
                 continue
             sub += row["value_num"]
             group_rows.append(row)
-        for e in [x for x in pf.extras if member is None or x.member == member]:
-            if e.asset_class != key:
-                continue
-            haystack = f"{e.label} {e.asset_class} {e.note}".lower()
-            if ql and ql not in haystack:
-                continue
-            total_value += e.value
-            sub += e.value
-            pl_pct = (e.value / e.invested - 1) * 100 if e.invested else None
-            group_rows.append({"name": e.label, "isin": "", "nse": tag or "—", "qty": None,
-                         "avg": e.invested, "price": None,
-                         "value": pmod.fmt_short(e.value), "value_num": e.value,
-                         "pl": (pmod.fmt_pct(pl_pct) if pl_pct is not None else "—"),
-                         "pl_up": (pl_pct or 0) >= 0, "pl_known": pl_pct is not None,
-                         "day": "—", "day_up": True, "day_known": False,
-                         "held_by": [e.member], "live": True,
-                         "is_extra": True, "note": e.note, "source": "Manual Asset",
-                         "source_ids": [], "asset_class": key})
         if group_rows:
             groups.append({"key": key, "title": title, "tag": tag, "rows": group_rows,
                            "subtotal": pmod.fmt_short(sub)})

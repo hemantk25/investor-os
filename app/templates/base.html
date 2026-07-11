@@ -6,13 +6,40 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Investor OS — {{ page }}</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+<script>
+try {
+  if (localStorage.getItem('investor_os_sidebar_collapsed') === '1') {
+    document.documentElement.classList.add('sidebar-collapsed');
+  }
+} catch (err) {}
+</script>
+<style>
+  .investor-sidebar { width: 240px; transition: width 180ms ease, padding 180ms ease; }
+  .main-shell { margin-left: 240px; transition: margin-left 180ms ease; }
+  .sidebar-label, .sidebar-brand-full, .sidebar-brand-sub { transition: opacity 120ms ease; }
+  .sidebar-brand-mark { display: none; }
+  html.sidebar-collapsed .investor-sidebar { width: 72px; padding-left: 12px; padding-right: 12px; }
+  html.sidebar-collapsed .main-shell { margin-left: 72px; }
+  html.sidebar-collapsed .sidebar-label,
+  html.sidebar-collapsed .sidebar-brand-full,
+  html.sidebar-collapsed .sidebar-brand-sub { display: none; }
+  html.sidebar-collapsed .sidebar-brand-mark { display: flex; }
+  html.sidebar-collapsed .sidebar-nav-link { justify-content: center; padding-left: 0; padding-right: 0; }
+  html.sidebar-collapsed #sidebarToggleIcon { transform: rotate(180deg); }
+  @media (max-width: 767px) {
+    .investor-sidebar { display: none; }
+    .main-shell { margin-left: 0; }
+    html.sidebar-collapsed .main-shell { margin-left: 0; }
+  }
+</style>
 </head>
 <body class="bg-background text-on-background font-body-md text-body-md min-h-screen flex antialiased">
 <!-- SideNavBar -->
-<aside class="hidden md:flex fixed left-0 top-0 h-full w-[240px] bg-surface border-r border-outline-variant flex-col py-margin_desktop px-stack_md z-50">
+<aside class="investor-sidebar hidden md:flex fixed left-0 top-0 h-full bg-surface border-r border-outline-variant flex-col py-margin_desktop px-stack_md z-50">
   <div class="mb-10 px-2 flex flex-col items-start">
-    <h2 class="font-h2 text-h2 font-bold text-primary">Investor OS</h2>
-    <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Private · Paresh Karia</p>
+    <h2 class="sidebar-brand-full font-h2 text-h2 font-bold text-primary">Investor OS</h2>
+    <div class="sidebar-brand-mark w-10 h-10 rounded-xl bg-secondary-container text-primary font-bold items-center justify-center">IO</div>
+    <p class="sidebar-brand-sub font-body-sm text-body-sm text-on-surface-variant mt-1">Private · Paresh Karia</p>
   </div>
   <nav class="flex flex-col gap-1 w-full flex-grow">
     {% set nav_items = [
@@ -25,15 +52,19 @@
       ('goal', '/goal', 'target', 'Goal'),
     ] %}
     {% for key, href, ic, label in nav_items %}
-    <a href="{{ href }}" class="flex items-center gap-3 px-4 py-3 rounded-lg font-body-md text-body-md cursor-pointer active:scale-95 transition-all {% if key == active %}bg-secondary-container text-primary font-medium{% else %}text-on-surface-variant hover:text-primary hover:bg-surface-container-highest transition-colors duration-200{% endif %}">
+    <a href="{{ href }}" title="{{ label }}" class="sidebar-nav-link flex items-center gap-3 px-4 py-3 rounded-lg font-body-md text-body-md cursor-pointer active:scale-95 transition-all {% if key == active %}bg-secondary-container text-primary font-medium{% else %}text-on-surface-variant hover:text-primary hover:bg-surface-container-highest transition-colors duration-200{% endif %}">
       {{ icon(ic) }}
-      <span>{{ label }}</span>
+      <span class="sidebar-label">{{ label }}</span>
     </a>
     {% endfor %}
   </nav>
+  <button id="sidebarToggle" type="button" class="mt-4 flex items-center justify-center gap-2 rounded-lg border border-[#E6E9F0] px-3 py-2 text-sm font-medium text-on-surface-variant hover:text-primary hover:border-primary/40" aria-label="Toggle sidebar">
+    <span id="sidebarToggleIcon" class="inline-block transition-transform">&lt;</span>
+    <span class="sidebar-label">Collapse</span>
+  </button>
 </aside>
 <!-- Main Content Area -->
-<main class="flex-1 ml-0 md:ml-[240px] flex flex-col min-h-screen">
+<main class="main-shell flex-1 ml-0 flex flex-col min-h-screen">
   <!-- TopAppBar -->
   <header class="sticky top-0 z-40 bg-background flex justify-between items-start w-full px-margin_desktop py-stack_md">
     <div>
@@ -53,5 +84,26 @@
     {% block content %}{% endblock %}
   </div>
 </main>
+<script>
+(function () {
+  const btn = document.getElementById('sidebarToggle');
+  if (!btn) return;
+  const html = document.documentElement;
+  const setLabel = () => {
+    const label = btn.querySelector('.sidebar-label');
+    if (label) label.textContent = html.classList.contains('sidebar-collapsed') ? 'Expand' : 'Collapse';
+    btn.setAttribute('aria-expanded', html.classList.contains('sidebar-collapsed') ? 'false' : 'true');
+  };
+  setLabel();
+  btn.addEventListener('click', function () {
+    html.classList.toggle('sidebar-collapsed');
+    try {
+      localStorage.setItem('investor_os_sidebar_collapsed',
+        html.classList.contains('sidebar-collapsed') ? '1' : '0');
+    } catch (err) {}
+    setLabel();
+  });
+})();
+</script>
 </body>
 </html>

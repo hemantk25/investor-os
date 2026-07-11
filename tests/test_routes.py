@@ -220,6 +220,9 @@ def test_profile_removed_from_nav_but_route_still_works(client):
     assert client.get("/profile").status_code == 200
 
 
-def test_goal_placeholder_route(client):
+def test_goal_page(client):
     r = client.get("/goal")
     assert r.status_code == 200
+    assert b"Goal" in r.data
+    assert b"Required" in r.data
+    assert (client.data_dir / "goal.json").exists()

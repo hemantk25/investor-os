@@ -40,6 +40,25 @@ def test_donut_chart_builds_gradient():
     assert round(sum(s["pct"] for s in chart["segments"])) == 100
 
 
+def test_dual_paths_shared_scale():
+    from app.charts import dual_paths
+    p = dual_paths([100.0, 200.0], [150.0, 250.0], w=1000, h=250)
+    assert p["actual_line"].startswith("M")
+    assert p["required_line"].startswith("M")
+
+    def last_y(path):
+        return float(path.split("L")[-1].split(",")[1])
+
+    def first_y(path):
+        return float(path.split("M")[1].split(" ")[0].split(",")[1])
+
+    y_actual_200 = last_y(p["actual_line"])
+    y_required_250 = last_y(p["required_line"])
+    y_required_150 = first_y(p["required_line"])
+    # shared vertical scale: higher values map to lower y (higher on screen)
+    assert y_required_250 < y_actual_200 < y_required_150
+
+
 def test_portfolio_series_reconstructs():
     from app.charts import portfolio_series
     from app.parser import parse_holdings

@@ -1,7 +1,7 @@
 from __future__ import annotations
 import os
 from pathlib import Path
-from flask import Flask, Response, redirect, render_template, render_template_string, request, url_for
+from flask import Flask, Response, redirect, render_template, request, url_for
 
 from app import parser, mapping, prices, advisory
 from app import portfolio as pmod
@@ -267,18 +267,14 @@ def create_app() -> Flask:
     @app.route("/goal")
     def goal_page():
         pf = load_portfolio()
+        if pf is None:
+            return render_template("goal.html", **_empty("goal", "Goal"))
         member = _member_arg()
-        ctx = vm.common(pf, "goal", member) if pf else _empty("goal", "Goal")
-        ctx["page"] = "Goal"; ctx["empty"] = False
-        return render_template_string(
-            """{% extends "base.html" %}
-{% block content %}
-<div class="bg-surface rounded-xl p-8 shadow-card border border-[#E6E9F0]">
-  <p class="font-body-md text-body-md text-on-surface-variant">Goal tracker coming soon</p>
-</div>
-{% endblock %}""",
-            **ctx,
-        )
+        ctx = vm.goal_ctx(pf, DATA)
+        ctx.update(vm.common(pf, "goal", member))
+        ctx["page"] = "Goal"
+        ctx["empty"] = False
+        return render_template("goal.html", **ctx)
 
     @app.route("/profile")
     def profile():

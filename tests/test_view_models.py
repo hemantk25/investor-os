@@ -51,6 +51,47 @@ def test_holdings_groups_and_search():
     assert any("Delta" in n for n in names) and not any("Alpha" in n for n in names)
 
 
+def test_goal_ctx_builds_kpis_chart_bands_compliance(tmp_path):
+    from app import storage
+
+    pf = _pf()
+    with storage.connect(tmp_path) as con:
+        con.execute(
+            """
+            INSERT INTO portfolio_snapshots(snapshot_date, member, total_value, invested_known,
+                                            pl, day_pl, payload, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            ("2026-01-01", "All", 40000000.0, 35000000.0, 5000000.0, 100000.0, "{}",
+             storage.now_iso()),
+        )
+        con.execute(
+            """
+            INSERT INTO portfolio_snapshots(snapshot_date, member, total_value, invested_known,
+                                            pl, day_pl, payload, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            ("2026-02-01", "All", 42000000.0, 35000000.0, 7000000.0, 150000.0, "{}",
+             storage.now_iso()),
+        )
+        con.commit()
+
+    ctx = vm.goal_ctx(pf, tmp_path)
+
+    assert len(ctx["kpis"]) == 4
+    assert "actual_line" in ctx["chart"] and "required_line" in ctx["chart"]
+    assert isinstance(ctx["bands"]["small_breach"], bool)
+    assert ctx["compliance"]
+
+
+def test_goal_ctx_flat_fallback_when_no_snapshots(tmp_path):
+    pf = _pf()
+    ctx = vm.goal_ctx(pf, tmp_path)
+    assert len(ctx["kpis"]) == 4
+    assert ctx["chart"]["actual_line"].startswith("M")
+    assert (tmp_path / "goal.json").exists()
+
+
 def test_news_ctx_empty_defaults(tmp_path):
     from app import news
     ctx = vm.news_ctx(tmp_path, None, False)

@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% block content %}
+{% if empty %}
+<div class="flex-1 flex items-center justify-center py-24">
+  <div class="flex flex-col items-center justify-center text-center bg-surface rounded-xl p-12 shadow-card border border-[#E6E9F0] max-w-lg">
+    <div class="w-16 h-16 rounded-full bg-secondary-container flex items-center justify-center mb-4 text-primary">
+      {{ icon('download') }}
+    </div>
+    <h2 class="font-h3 text-h3 text-on-surface mb-2">No holdings yet</h2>
+    <p class="font-body-md text-body-md text-on-surface-variant">Drop the ICICI export into <code class="px-1.5 py-0.5 rounded bg-surface-container-low text-primary font-medium">data/holdings.xlsx</code> before tracking the goal.</p>
+  </div>
+</div>
+{% else %}
+<section class="flex flex-col gap-stack_lg">
+  {% if goal_error %}
+  <div class="bg-status-error/5 border border-status-error/30 rounded-xl p-4 flex items-start gap-3">
+    <span class="w-8 h-8 rounded-full bg-status-error/10 text-status-error flex items-center justify-center shrink-0 font-bold">!</span>
+    <p class="font-body-sm text-body-sm text-on-surface-variant"><code class="px-1.5 py-0.5 rounded bg-surface-container-low text-primary font-medium">data/goal.json</code> could not be read, so default targets are shown below. Fix or delete the file to reset it.</p>
+  </div>
+  {% endif %}
+
+  <!-- KPI Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-gutter">
+    {% for c in kpis %}
+    <div class="bg-surface rounded-xl p-6 shadow-card border border-[#E6E9F0] flex flex-col gap-2 hover:shadow-card-hover hover:border-primary/30 transition-all cursor-default">
+      <h3 class="font-body-sm text-body-sm text-on-surface-variant font-medium">{{ c.label }}</h3>
+      <div class="mt-2 flex flex-col">
+        <span class="{% if loop.first %}font-h1 text-h1{% else %}font-number-display text-number-display{% endif %} {% if c.tone == 'up' %}text-status-success{% elif c.tone == 'down' %}text-status-error{% else %}text-on-surface{% endif %}">{{ c.value }}</span>
+        {% if c.tone == 'up' %}
+        <div class="flex items-center gap-1 mt-1 text-status-success bg-status-success/10 w-fit px-2 py-0.5 rounded text-sm font-medium">
+          <span class="text-xs">&#9650;</span>
+          <span>{{ c.sub }}</span>
+        </div>
+        {% elif c.tone == 'down' %}
+        <div class="flex items-center gap-1 mt-1 text-status-error bg-status-error/10 w-fit px-2 py-0.5 rounded text-sm font-medium">
+          <span class="text-xs">&#9660;</span>
+          <span>{{ c.sub }}</span>
+        </div>
+        {% else %}
+        <span class="font-body-sm text-body-sm text-outline mt-1 font-number-display tracking-wide">{{ c.sub }}</span>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Goal Trajectory Chart -->
+  <div class="bg-surface rounded-xl p-6 shadow-card border border-[#E6E9F0] flex flex-col">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-5">
+      <div>
+        <h2 class="font-h3 text-h3 text-on-surface">Goal Trajectory</h2>
+        <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Actual portfolio value vs. the path required to reach the target on time.</p>
+      </div>
+      <div class="flex items-center gap-4 text-xs font-medium">
+        <span class="flex items-center gap-1.5 text-on-surface-variant">
+          <span class="w-3 h-0.5 rounded-full" style="background: {{ chart.legend[0].color }}"></span>
+          {{ chart.legend[0].label }}
+        </span>
+        <span class="flex items-center gap-1.5 text-on-surface-variant">
+          <span class="w-3 h-0 border-t-2 border-dashed" style="border-color: {{ chart.legend[1].color }}"></span>
+          {{ chart.legend[1].label }}
+        </span>
+      </div>
+    </div>
+    <svg viewBox="0 0 1000 250" preserveAspectRatio="none" class="w-full h-56">
+      <defs>
+        <linearGradient id="goalAreaGradient" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="{{ chart.legend[0].color }}" stop-opacity="0.28"/>
+          <stop offset="100%" stop-color="{{ chart.legend[0].color }}" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <path d="{{ chart.area }}" fill="url(#goalAreaGradient)" stroke="none"/>
+      <path d="{{ chart.required_line }}" fill="none" stroke="{{ chart.legend[1].color }}" stroke-width="2" stroke-dasharray="6 6"/>
+      <path d="{{ chart.actual_line }}" fill="none" stroke="{{ chart.legend[0].color }}" stroke-width="2.5"/>
+    </svg>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter">
+    <!-- Market-Cap Bands -->
+    <div class="bg-surface rounded-xl p-6 shadow-card border border-[#E6E9F0] flex flex-col gap-5">
+      <div class="flex items-center justify-between">
+        <h2 class="font-h3 text-h3 text-on-surface">Market-Cap Bands</h2>
+        {% if bands.small_breach %}
+        <span class="rounded-full bg-status-error/10 text-status-error px-3 py-1 text-xs font-medium">Small-cap over target</span>
+        {% endif %}
+      </div>
+      <div class="flex flex-col gap-4">
+        {% for row in bands.rows %}
+        <div>
+          <div class="flex items-center justify-between text-sm mb-1.5">
+            <span class="font-body-sm text-body-sm font-medium {% if row.flag %}text-status-error{% else %}text-on-surface{% endif %}">{{ row.label }}</span>
+            <span class="font-number-display text-sm {% if row.flag %}text-status-error{% else %}text-on-surface-variant{% endif %}">{{ '%.1f'|format(row.actual_pct) }}% <span class="text-outline">/ {{ row.target_pct }}% target</span></span>
+          </div>
+          <div class="relative w-full h-2.5 rounded-full bg-surface-container-low overflow-hidden">
+            <div class="h-full rounded-full {% if row.flag %}bg-status-error{% else %}bg-primary{% endif %}" style="width: {{ [row.actual_pct, 100]|min }}%"></div>
+            <div class="absolute top-0 h-full w-0.5 bg-on-surface/40" style="left: {{ [row.target_pct, 100]|min }}%"></div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% if bands.unclassified_note %}
+      <p class="font-body-sm text-body-sm text-on-surface-variant">{{ bands.unclassified_note }}</p>
+      {% endif %}
+    </div>
+
+    <!-- Compliance Checklist -->
+    <div class="bg-surface rounded-xl p-6 shadow-card border border-[#E6E9F0] flex flex-col gap-4">
+      <h2 class="font-h3 text-h3 text-on-surface">Compliance Checklist</h2>
+      <div class="flex flex-col gap-2">
+        {% for rule in compliance %}
+        <div class="flex items-start gap-3 rounded-lg px-3 py-2.5 {% if rule.ok %}bg-status-success/5{% else %}bg-status-error/5{% endif %}">
+          <span class="rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold shrink-0 {% if rule.ok %}bg-status-success/10 text-status-success{% else %}bg-status-error/10 text-status-error{% endif %}">{% if rule.ok %}&#10003;{% else %}&#10007;{% endif %}</span>
+          <div>
+            <p class="font-body-sm text-body-sm font-medium text-on-surface">{{ rule.rule }}</p>
+            {% if rule.detail %}<p class="text-xs text-on-surface-variant mt-0.5">{{ rule.detail }}</p>{% endif %}
+          </div>
+        </div>
+        {% else %}
+        <p class="font-body-sm text-body-sm text-on-surface-variant">No compliance rules to check yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  {% if profile_link %}
+  <a href="/profile" class="flex items-center justify-between bg-surface rounded-xl p-4 shadow-card border border-[#E6E9F0] hover:border-primary/30 transition-colors group">
+    <span class="font-body-sm text-body-sm text-on-surface-variant">Bands, compliance rules, and the full investor profile live in one place.</span>
+    <span class="font-body-sm text-body-sm font-medium text-primary group-hover:underline shrink-0 ml-4">View your full rules &rarr;</span>
+  </a>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}

@@ -22,6 +22,30 @@ def area_path(series, w: int = 1000, h: int = 250) -> dict:
     return {"line": line, "area": area}
 
 
+def dual_paths(actual, required, w: int = 1000, h: int = 250) -> dict:
+    combined = list(actual) + list(required)
+    if not combined:
+        flat = f"M0,{h//2} L{w},{h//2}"
+        return {"actual_line": flat, "required_line": flat, "area": f"M0,{h} L{w},{h} Z"}
+    lo, hi = min(combined), max(combined)
+    span = (hi - lo) or 1.0
+
+    def y(v):
+        return h - (v - lo) / span * (h * 0.9) - h * 0.05
+
+    def line_for(series):
+        s = series if len(series) > 1 else (series * 2 if series else [lo, lo])
+        n = len(s)
+        def x(i): return i * w / (n - 1)
+        pts = [f"{x(i):.1f},{y(v):.1f}" for i, v in enumerate(s)]
+        return "M" + " L".join(pts)
+
+    actual_line = line_for(list(actual))
+    required_line = line_for(list(required))
+    area = actual_line + f" L{w:.1f},{h} L0,{h} Z"
+    return {"actual_line": actual_line, "required_line": required_line, "area": area}
+
+
 def alloc_segments(totals) -> list[dict]:
     total = totals.total_value or 1.0
     out = []

@@ -254,6 +254,78 @@ def brief_ctx(base_dir, pf, pick: str | None, data_dir) -> dict:
             "impact": impact, "has_brief": bool(chosen)}
 
 
+def goal_ctx(pf, data_dir) -> dict:
+    from datetime import date
+    from app import goal as goal_mod
+    from app import storage
+
+    current_total = pf.totals().total_value
+    goal = goal_mod.load_goal(data_dir, current_total=current_total)
+    today = date.today()
+
+    with storage.connect(data_dir) as con:
+        rows = con.execute(
+            "SELECT total_value FROM portfolio_snapshots WHERE member = 'All' "
+            "ORDER BY snapshot_date"
+        ).fetchall()
+    actual_values = [r["total_value"] for r in rows]
+    if len(actual_values) < 2:
+        actual_values = [current_total, current_total]
+
+    required_points = goal_mod.required_series(goal, today, points=len(actual_values))
+    required_values = [v for _, v in required_points]
+
+    chart = charts.dual_paths(actual_values, required_values)
+    chart["legend"] = [{"label": "Actual", "color": charts.CHART_COLORS[0]},
+                       {"label": "Required path", "color": "#64748b"}]
+
+    required_today = goal_mod.required_value(goal, today)
+    diff = current_total - required_today
+    diff_pct = (diff / required_today * 100) if required_today else 0.0
+
+    implied = goal_mod.implied_cagr(goal, current_total, today)
+    if implied is None:
+        cagr_value = "Reassess target"
+    elif implied == 0.0:
+        cagr_value = "On track"
+    else:
+        cagr_value = f"{implied:.1f}%"
+    target_dt = date.fromisoformat(goal["target_date"])
+
+    kpis = [
+        {"label": "Current Value", "value": pmod.fmt_short(current_total),
+         "sub": pmod.fmt_inr(current_total), "tone": "muted"},
+        {"label": "Required Today", "value": pmod.fmt_short(required_today),
+         "sub": pmod.fmt_inr(required_today), "tone": "muted"},
+        {"label": "Ahead / Behind", "value": pmod.fmt_short(diff),
+         "sub": f"{pmod.fmt_pct(diff_pct)} of required", "tone": "up" if diff >= 0 else "down"},
+        {"label": "Implied CAGR Needed", "value": cagr_value,
+         "sub": f"target {pmod.fmt_short(goal['target_value'])} by {target_dt:%b %Y}",
+         "tone": "muted"},
+    ]
+
+    meta = goal_mod.load_security_meta(data_dir)
+    caps = goal_mod.classify_caps(pf.consolidated(), meta, goal)
+    bands_pct = goal["bands_pct"]
+    band_rows = [
+        {"key": key, "label": label, "actual_pct": caps[key]["pct"],
+         "target_pct": bands_pct[key], "flag": key == "small" and caps["small_breach"]}
+        for key, label in [("large", "Large Cap"), ("mid", "Mid Cap"), ("small", "Small Cap")]
+    ]
+    unclassified_value = caps["unclassified"]["value"]
+    bands = {"rows": band_rows, "small_breach": caps["small_breach"],
+             "unclassified_value": unclassified_value,
+             "unclassified_note": (f"{pmod.fmt_short(unclassified_value)} unclassified — "
+                                    "market caps fill in after a refresh")
+                                   if unclassified_value > 0 else ""}
+
+    compliance = goal_mod.compliance(pf.consolidated(), meta)
+
+    ctx = {"kpis": kpis, "chart": chart, "bands": bands, "compliance": compliance,
+           "profile_link": True, "goal_error": "error" in goal}
+    return ctx
+
+
 def profile_ctx(base_dir) -> dict:
     import markdown as md
     p = base_dir / "profile" / "one-pager.md"

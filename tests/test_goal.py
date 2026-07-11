@@ -59,18 +59,19 @@ def test_required_value_no_time():
     assert goal_mod.required_value(g, on_date) == g["baseline_value"]
 
 
+# Pre-computed 2026-07-10, independently of app/goal.py, from the spec formula:
+# m = 365/30.4375; r = 1.16**(1/12) - 1; 1e8*(1+r)**m + 500000*(((1+r)**m - 1)/r)
+EXPECTED_1Y = 122_411_695.38736793
+
+
 def test_required_value_one_year():
     t0 = date(2026, 1, 1)
     on_date = t0 + timedelta(days=365)
     g = {"baseline_value": 1e8, "baseline_date": t0.isoformat(),
          "expected_cagr_pct": 16.0, "sip_monthly": 500000}
-
-    r = (1.16) ** (1 / 12) - 1
-    m = (on_date - t0).days / 30.4375
-    expected = 1e8 * (1 + r) ** m + 500000 * (((1 + r) ** m - 1) / r)
-
-    result = goal_mod.required_value(g, on_date)
-    assert abs(result - expected) < 1
+    # Hardcoded literal: this must fail if the production math (day-count
+    # constant, annuity shape) ever changes.
+    assert abs(goal_mod.required_value(g, on_date) - EXPECTED_1Y) < 5
 
 
 def test_required_series_baseline_day_gives_identical_points():
@@ -319,3 +320,23 @@ def test_refresh_security_meta_no_symbols_returns_zero(tmp_path):
     pf = _FakePF([])
     assert goal_mod.refresh_security_meta(tmp_path, pf) == 0
     assert goal_mod.refresh_security_meta(tmp_path, None) == 0
+
+
+def test_refresh_security_meta_caps_lookups_at_25(tmp_path, monkeypatch):
+    calls = []
+
+    class FakeTicker:
+        def __init__(self, symbol):
+            self.symbol = symbol
+
+        @property
+        def info(self):
+            calls.append(self.symbol)
+            return {"marketCap": 1e12, "sector": "X", "industry": "Y"}
+
+    monkeypatch.setattr(yfinance, "Ticker", FakeTicker)
+
+    pf = _FakePF([f"SYM{i}" for i in range(30)])
+    updated = goal_mod.refresh_security_meta(tmp_path, pf)
+    assert updated == 25
+    assert len(calls) == 25

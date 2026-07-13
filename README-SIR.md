@@ -3,23 +3,33 @@
 This is a local dashboard. It is not deployed, and the financial files stay in
 this folder.
 
-## Each Use
-1. Download the latest ICICI Direct holdings export.
-2. Put it here, replacing `data/holdings.xlsx`.
-3. Optional: replace `data/advisory.xlsx` if there is a new advisory report.
-4. Double-click **start-dashboard.ps1** on Windows.
-5. Open http://127.0.0.1:8555 if the browser does not open automatically.
-6. Click **Refresh local data** on Overview when you want prices, watchlists,
-   portfolio snapshots, news, and goal metadata refreshed immediately.
+## The daily ritual (3 steps)
+1. **When you have new data:** download the ICICI Direct holdings export and
+   drag it into `data/holdings/` — **any filename is fine, never rename it**.
+   The newest file in that folder always wins. Same for advisory reports →
+   `data/advisory/`.
+2. **Start:** open this folder in Claude Code and paste the prompt from
+   `PROMPT_DAILY_START.md` — Claude will load everything, fetch live prices
+   and news, explain the data freshness to you, and hand you the dashboard
+   link. (Prefer no typing? Double-click **Daily Start.command** on Mac /
+   **daily-start.ps1** on Windows — same result, without the explanation.)
+3. **Read:** by the time the browser opens, every number is live and
+   preloaded.
+
+## Adding a TradingView watchlist (the one extra thing to learn)
+TradingView's export needs a paid plan, so do this instead: take a
+**screenshot** of your watchlist in TradingView, paste the image into Claude
+Code, and say "add this watchlist to the dashboard (market: India)". Claude
+reads the symbols from the picture and imports them.
 
 ## Every morning (optional)
-Open **Morning Brief** and click **Generate Morning Brief**. Claude reads:
-`data/holdings.xlsx`, `profile/one-pager.md`, stored news, watchlists, and the
+Open **Morning Brief** and click **Generate Morning Brief**. Claude reads your
+newest holdings file, `profile/one-pager.md`, stored news, watchlists, and the
 dashboard logic, then writes the brief into `briefs/`.
 
 ## What each page is for
 - **Overview:** market pulse, portfolio KPIs, asset-class split, and family split.
-- **Holdings:** read-only brokerage-style view from `data/holdings.xlsx`.
+- **Holdings:** read-only brokerage-style view from the newest file in `data/holdings/`.
 - **Watchlist:** TradingView-style local watchlist boards for India, US, UAE, Canada, and global symbols.
 - **Morning Brief:** Market Brief plus portfolio Impact table.
 - **News:** refresh/read market and portfolio-related news with real links.

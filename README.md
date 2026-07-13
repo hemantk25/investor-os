@@ -32,7 +32,7 @@ For Google Drive handoff, read `GOOGLE_DRIVE_HANDOFF.md` first. The large
 - **Overview:** market pulse, portfolio KPI cards, asset-class split, and family
   split visuals.
 - **Holdings:** searchable brokerage-style read-only holdings page driven by
-  `data/holdings.xlsx`.
+  the newest file in `data/holdings/`.
 - **Watchlist:** TradingView-inspired multi-board workspace with country,
   named watchlists, latest quote snapshots, and TradingView TXT import/export.
 - **Morning Brief:** local Claude CLI generation with Market Brief and a measured
@@ -61,7 +61,7 @@ gitignored and never leave it).
 
 **Each use**
 
-1. Drop the weekly ICICI Direct holdings export into `data/holdings.xlsx`
+1. Drop the weekly ICICI Direct holdings export into `data/holdings/` (any filename)
    (and the advisory report into `data/advisory.xlsx` if available).
 2. macOS: double-click **Start Dashboard.command**. Windows: `./start-dashboard.ps1`.
 3. The browser opens at http://127.0.0.1:8555.
@@ -73,7 +73,7 @@ CSS is prebuilt and committed in `app/static/app.css`. Only rebuild it after
 changing Tailwind classes in templates.
 
 Holdings are file-only in the dashboard. The source of truth is
-`data/holdings.xlsx`; old manual holding records may remain in SQLite but are
+the newest file in `data/holdings/`; old manual holding records may remain in SQLite but are
 ignored for totals and UI.
 
 The one-page owner guide is `README-SIR.md`; the maintenance playbook for

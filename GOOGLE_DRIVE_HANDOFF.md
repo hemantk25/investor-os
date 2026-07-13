@@ -15,6 +15,8 @@ Keep:
 - `README-SIR.md`
 - `CLAUDE.md`
 - `PROMPT_FOR_CLAUDE_DASHBOARD.md`
+- `PROMPT_DAILY_START.md`
+- `daily-start.ps1` and `Daily Start.command`
 
 Do not upload:
 - `.venv/`
@@ -46,7 +48,7 @@ who may see the portfolio.
 ## CEO Workflow
 
 1. Upload/open the clean handoff folder in Google Drive.
-2. Put the latest ICICI export at `data/holdings.xlsx`.
+2. Drop the latest ICICI export into `data/holdings/` (any filename).
 3. Open the folder in Claude Code/Codex.
 4. Paste the contents of `PROMPT_FOR_CLAUDE_DASHBOARD.md`.
 5. Start the dashboard and use `http://127.0.0.1:8555`.

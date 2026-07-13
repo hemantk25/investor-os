@@ -8,7 +8,7 @@ You are inside the Investor OS folder. Please do the following carefully:
 
 1. Read CLAUDE.md, README-SIR.md, README.md, and the current project files.
 2. Confirm that the private data files exist:
-   - data/holdings.xlsx
+   - the newest .xlsx in data/holdings/ (or flat data/holdings.xlsx)
    - profile/one-pager.md
    - data/advisory.xlsx if available
 3. Do not commit, upload, print, or expose private data from data/, briefs/,
@@ -24,7 +24,7 @@ You are inside the Investor OS folder. Please do the following carefully:
    without changing the core data model unless I explicitly approve it.
 
 Current intended workflow:
-- Holdings are read-only from data/holdings.xlsx.
+- Holdings are read-only from the newest file in data/holdings/.
 - Watchlists are local/private in data/investor_os.sqlite.
 - Morning Brief uses the local Claude CLI; if login/usage fails, show a clear
   diagnostic and keep the dashboard usable.

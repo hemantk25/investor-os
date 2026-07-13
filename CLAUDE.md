@@ -5,11 +5,11 @@ Cowork) are its maintenance interface. The owner is non-technical — when he as
 for changes, do them end-to-end and verify before reporting done.
 
 ## How it works
-- `data/holdings.xlsx` — weekly ICICI Direct export. Member sheets (PK/CK/NK/DK)
+- `data/holdings/` — drop-box for weekly ICICI Direct exports (any filename; the newest .xlsx wins; flat data/holdings.xlsx still works). Member sheets (PK/CK/NK/DK)
   are parsed by `app/parser.py` (ISIN is the key; symbols in the file are ICICI
   codes, NOT NSE tickers).
 - Holdings are file-only in the visible dashboard. The source of truth is
-  `data/holdings.xlsx`; old manual holding/sell events may remain in SQLite but
+  the newest file in `data/holdings/`; old manual holding/sell events may remain in SQLite but
   are ignored for current totals and UI.
 - `app/mapping.py` maps ISIN → NSE symbol (cache `data/isin-map.csv`; manual fixes
   in `data/overrides.csv` — isin,symbol — which always win).
@@ -26,7 +26,7 @@ for changes, do them end-to-end and verify before reporting done.
 - `app/watchlist.py` manages the TradingView-style local watchlist workspace,
   boards, filters, quotes, and TXT import/export. There is no direct TradingView
   API dependency.
-- `data/advisory.xlsx` + `app/advisory.py` power the Rebalance view. Baseline
+- `data/advisory/` (newest .xlsx wins; flat data/advisory.xlsx still works) + `app/advisory.py` power the Rebalance view. Baseline
   quantities are frozen in `data/advisory-baseline.json` (delete it to re-baseline).
   Manual status overrides: `data/rebalance-status.json` e.g. {"Oravel Stays (OYO)": "DONE"}.
 - `app/news.py` fetches market and portfolio-related news from Google News RSS
@@ -51,20 +51,32 @@ Rebalance, and Goal. `/profile` still exists and is linked from Goal/Brief, but
 it is intentionally not in the side nav.
 
 ## Weekly ritual (owner does this)
-Download holdings Excel from ICICI Direct → replace `data/holdings.xlsx` → open
-the dashboard (`start-dashboard.ps1` on Windows).
+Download holdings Excel from ICICI Direct → drop it into `data/holdings/` (any
+name; newest file wins) → run the daily start (below). Advisory reports go into
+`data/advisory/` the same way. Never ask the owner to rename files.
 
-## Local refresh
-Use the Overview or Watchlist refresh button, the News page's **Refresh news**
-button, or run:
+## Daily start (the owner's main flow)
+When the owner pastes the contents of `PROMPT_DAILY_START.md` — or says
+anything like "start my dashboard" or "I updated the data folder" — do this:
+1. Run `python -m app.refresh` (venv python). It prints a freshness report.
+2. Explain the report in plain English: which holdings file, how old, rows
+   loaded/skipped, live-price coverage, news count, and EVERY warning
+   (especially "incomplete export" / "file is N days old" → remind the owner
+   to download a fresh full export into `data/holdings/`).
+3. Start the server in the background (`python -m flask --app app.server run
+   --port 8555`), give the link http://127.0.0.1:8555 and a one-line portfolio
+   summary.
+Launchers that do steps 1+3 without Claude: `Daily Start.command` (mac),
+`daily-start.ps1` (Windows).
 
-`python -m app.refresh`
-
-This is the same command a future Windows Task Scheduler job should call. It is
-manual/local for now; there is no always-on service.
+## Watchlist updates (screenshot flow — TradingView export needs a paid plan)
+When the owner pastes a TradingView watchlist screenshot: read the symbols
+from the image, normalise to `EXCHANGE:SYMBOL` (e.g. `NSE:RELIANCE`), then run
+`python -m app.watchlist_cli import "SYM1,SYM2" --market <India|US|UAE|Canada|Global>
+--category Stocks --group Custom` and confirm the added/skipped counts back.
 
 ## Maintenance playbook — likely requests and what to do
-- "Dashboard won't start" → run `./setup.sh`, then `Start Dashboard.command`;
+- "Dashboard won't start" → run `./setup.sh`, then `Daily Start.command`;
   check Python 3.11+ exists (`python3 --version`). The app serves at
   `http://127.0.0.1:8555`.
 - "Change how a page looks" → edit the matching template in `app/templates/`.
@@ -82,7 +94,7 @@ manual/local for now; there is no always-on service.
 - "Add a family member" → nothing to do; any new member sheet in the Excel is
   picked up automatically.
 - "Add/edit/sell a holding" → do not use manual UI; it is intentionally disabled.
-  Replace `data/holdings.xlsx` with the latest broker export.
+  Drop the latest broker export into `data/holdings/`.
 - "Add gold/FD/MF" → edit `data/extras.json`:
   [{"member":"PK","label":"SGB 2022","asset_class":"gold","value":500000,"invested":400000}]
 - "Change watchlists" → use `/watchlist`; items/boards live in SQLite. TXT

@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 from flask import Flask, Response, redirect, render_template, request, url_for
 
-from app import parser, mapping, prices, advisory
+from app import parser, mapping, prices, advisory, datafiles
 from app import portfolio as pmod
 from app import view_models as vm
 from app import charts
@@ -11,13 +11,12 @@ from app import watchlist as wmod
 
 BASE = Path(__file__).resolve().parent.parent
 DATA = Path(os.environ.get("INVESTOR_OS_DATA", str(BASE / "data")))
-HOLDINGS = DATA / "holdings.xlsx"
 
 
 def load_portfolio():
-    if not HOLDINGS.exists():
+    pr, _path, _warns = datafiles.resolve_and_parse_holdings(DATA)
+    if pr is None:
         return None
-    pr = parser.parse_holdings(HOLDINGS)
     isin_map = mapping.ensure_map(DATA)
     quotes = prices.fetch_quotes([isin_map.get(h.isin) for h in pr.holdings if isin_map.get(h.isin)])
     extras = pmod.load_extras(DATA / "extras.json")
@@ -91,22 +90,22 @@ def create_app() -> Flask:
 
     @app.route("/holdings/manual", methods=["POST"])
     def holdings_manual_add():
-        return Response("Manual holdings are disabled. Replace data/holdings.xlsx instead.",
+        return Response("Manual holdings are disabled. Drop the new ICICI export into data/holdings/ instead.",
                         status=410)
 
     @app.route("/holdings/manual/<int:item_id>/edit", methods=["POST"])
     def holdings_manual_edit(item_id):
-        return Response("Manual holdings are disabled. Replace data/holdings.xlsx instead.",
+        return Response("Manual holdings are disabled. Drop the new ICICI export into data/holdings/ instead.",
                         status=410)
 
     @app.route("/holdings/manual/<int:item_id>/delete", methods=["POST"])
     def holdings_manual_delete(item_id):
-        return Response("Manual holdings are disabled. Replace data/holdings.xlsx instead.",
+        return Response("Manual holdings are disabled. Drop the new ICICI export into data/holdings/ instead.",
                         status=410)
 
     @app.route("/holdings/events/sell", methods=["POST"])
     def holdings_sell():
-        return Response("Sell/reduce actions are disabled. Replace data/holdings.xlsx instead.",
+        return Response("Sell/reduce actions are disabled. Drop the new ICICI export into data/holdings/ instead.",
                         status=410)
 
     @app.route("/watchlist")
@@ -228,8 +227,8 @@ def create_app() -> Flask:
             return render_template("rebalance.html", **_empty("rebalance", "Rebalance"))
         member = _member_arg()
         common = vm.common(pf, "rebalance", member)
-        advp = DATA / "advisory.xlsx"
-        if not advp.exists():
+        advp = datafiles.latest_advisory(DATA)
+        if advp is None:
             return render_template("rebalance.html", page="Rebalance", empty=False,
                                    no_adv=True, tab="exits", exits=[], buys=[],
                                    sched=[], summary="", **common)

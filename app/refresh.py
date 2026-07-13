@@ -14,10 +14,10 @@ def _data_dir() -> Path:
 
 
 def load_portfolio_for_refresh(data_dir: Path):
-    holdings = data_dir / "holdings.xlsx"
-    if not holdings.exists():
+    from app import datafiles
+    pr, _path, _warns = datafiles.resolve_and_parse_holdings(data_dir)
+    if pr is None:
         return None
-    pr = parser.parse_holdings(holdings)
     isin_map = mapping.ensure_map(data_dir)
     quotes = prices.fetch_quotes([isin_map.get(h.isin) for h in pr.holdings if isin_map.get(h.isin)])
     extras = pmod.load_extras(data_dir / "extras.json")

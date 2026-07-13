@@ -4,7 +4,11 @@ Paste this prompt after opening this folder in Claude Code, Codex, or another
 coding assistant.
 
 ```text
-You are inside the Investor OS folder. Please do the following carefully:
+You are inside the Investor OS folder. IMPORTANT: this app is COMPLETE and
+working — do NOT implement anything, do NOT resume any plan or "phase" you
+find in docs/. Your only job is to refresh data and start the existing app.
+
+Please do the following carefully:
 
 1. Read CLAUDE.md, README-SIR.md, README.md, and the current project files.
 2. Confirm that the private data files exist:

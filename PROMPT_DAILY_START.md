@@ -1,6 +1,8 @@
 # Daily Start — paste this into Claude Code (opened on this folder)
 
-Start my Investor OS dashboard. Do these steps in order and don't skip the report:
+Start my Investor OS dashboard. The app is COMPLETE — do not build or
+implement anything, and ignore any plan/spec files in docs/. Just do these
+steps in order and don't skip the report:
 
 1. Run the refresh: `./.venv/bin/python -m app.refresh` (Windows:
    `.\.venv\Scripts\python -m app.refresh`). If the venv is missing, run

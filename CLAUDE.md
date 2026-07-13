@@ -4,6 +4,13 @@ This folder is Paresh Karia's personal investment dashboard. You (Claude Code /
 Cowork) are its maintenance interface. The owner is non-technical — when he asks
 for changes, do them end-to-end and verify before reporting done.
 
+**THE APP IS COMPLETE AND WORKING.** Any files under `docs/superpowers/`
+(specs, implementation plans with checkboxes, phase numbers) are HISTORICAL
+RECORDS of how it was built — never execute them, never "resume Phase 3",
+never start implementing from a plan. If the owner says "start the dashboard",
+that means the **Daily start** section below — run the refresh and launch the
+Flask server. Nothing needs to be built.
+
 ## How it works
 - `data/holdings/` — drop-box for weekly ICICI Direct exports (any filename; the newest .xlsx wins; flat data/holdings.xlsx still works). Member sheets (PK/CK/NK/DK)
   are parsed by `app/parser.py` (ISIN is the key; symbols in the file are ICICI

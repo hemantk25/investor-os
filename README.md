@@ -2,8 +2,8 @@
 
 An AI-powered personal investment system, modelled on the "AI Financial
 Advisor" architecture (AI Edge, https://youtu.be/VvuHr46wF-4). This repo now
-contains both the original offline demo package and the Phase 3 local-first
-dashboard used with real private data on the owner's machine.
+contains the current local-first Flask dashboard plus historical reference
+material from the earlier demo/build phases.
 
 ## What's in here
 
@@ -13,60 +13,30 @@ dashboard used with real private data on the owner's machine.
 | `data/` | Private local financial data folder, gitignored |
 | `briefs/` | Locally generated morning briefs, gitignored |
 | `profile/` | Owner profile/rules, gitignored |
-| `demo/investor-os-dashboard.html` | Interactive dashboard mockup — double-click to open, works offline |
+| `demo/investor-os-dashboard.html` | Historical offline mockup/reference |
 | `prompts/investor-interview-prompt.md` | Paste into Claude/ChatGPT → AI interviews Sir → produces his investor one-pager |
 | `prompts/investor-os-builder-prompt.md` | For Phase 2: builds the full memory folder in Claude Cowork/Code |
 | `prompts/sample-investor-one-pager.md` | Filled fictional example of what the interview produces |
 | `docs/superpowers/specs/` · `docs/superpowers/plans/` | Design spec and implementation plan |
+| `PROMPT_FOR_CLAUDE_DASHBOARD.md` | Paste into Claude/Codex to refresh/start the local dashboard |
+| `GOOGLE_DRIVE_HANDOFF.md` | Notes for preparing a clean Google Drive handoff |
 
 Private financial files are intentionally not committed. Tests use fake fixture
 data from `tests/fixtures/`.
 
-Tip: the dashboard supports deep links — open it with `#view-brief`,
-`#view-alerts`, etc. to land on a specific view, or `#selftest` to see the
-data-consistency checks pass.
-
-## Demo script (10 minutes, in this order)
-
-1. **Open the dashboard** (`demo/investor-os-dashboard.html`).
-2. **Overview** — "your whole net worth in one place, in ₹, updated live in
-   the real version" (charts, allocation donut, top movers).
-3. **Holdings** — grouped by asset class; point at TCS in red.
-4. **Morning Brief** — click ⚡ Generate. While it types: "every morning at
-   7 AM this reads your portfolio, YOUR rules, and overnight news — this is
-   the newsletter, personalised to you." Scroll to the weekly newsletter.
-5. **Alerts & Phone** — the Telegram sequence plays; "this is your phone at
-   7 AM — free, no app to build."
-6. **Investor Profile** — the punchline: "all of this obeys ONE file that
-   you own and can edit in Word. The AI writes that file by interviewing
-   you for 20 minutes." Show `prompts/investor-interview-prompt.md`.
-7. Ask for approval to proceed to Phase 2.
-
-## Roadmap
-
-- **Phase 1 (this repo):** demo package → Sir's approval.
-- **Phase 2:** run the real interview with Sir (chat prompt), then build his
-  memory folder in Cowork (`investor-os-builder-prompt.md`). Output:
-  his real one-pager + instructions.md + memory.md + financials/.
-- **Phase 3 (in progress, `phase3-dashboard` branch):** the real local-first
-  dashboard — Flask + Stitch-style Jinja/Tailwind UI, yfinance, ICICI Excel
-  ingestion, SQLite event ledger, editable holdings, watchlist workspace, news,
-  rebalance tracker, goal tracker, and morning briefs via Claude Code. See
-  "Running the real dashboard" below.
-- **Phase 4:** Telegram bot (BotFather), scheduled 7 AM morning brief,
-  price/news alerts, weekly newsletter.
+For Google Drive handoff, read `GOOGLE_DRIVE_HANDOFF.md` first. The large
+`.venv/` folder and Git/caches should not be uploaded.
 
 ## Current dashboard features
 
-- **Overview:** market pulse, portfolio KPI cards, asset-class and family split
-  visuals, top movers, and watchlist preview.
-- **Holdings:** searchable brokerage-style holdings page with manual add/edit,
-  sell/reduce events, source badges, and Excel-vs-manual dedupe.
+- **Overview:** market pulse, portfolio KPI cards, asset-class split, and family
+  split visuals.
+- **Holdings:** searchable brokerage-style read-only holdings page driven by
+  `data/holdings.xlsx`.
 - **Watchlist:** TradingView-inspired multi-board workspace with country,
-  category, subcategory, holder filters, latest quote snapshots, and
-  TradingView TXT import/export.
-- **Morning Brief:** local Claude CLI generation with Market Brief, My Stocks,
-  Impact Notes, and a measured portfolio-impact table.
+  named watchlists, latest quote snapshots, and TradingView TXT import/export.
+- **Morning Brief:** local Claude CLI generation with Market Brief and a measured
+  portfolio-impact table with future-impact signals.
 - **News:** local news store populated from Google News RSS/Yahoo feeds, with
   market tabs and portfolio-news filtering.
 - **Rebalance:** advisory exits/buys/schedule tracking from the ICICI advisory
@@ -92,7 +62,7 @@ gitignored and never leave it).
 **Each use**
 
 1. Drop the weekly ICICI Direct holdings export into `data/holdings.xlsx`
-   (and the advisory report into `data/advisory.xlsx`).
+   (and the advisory report into `data/advisory.xlsx` if available).
 2. macOS: double-click **Start Dashboard.command**. Windows: `./start-dashboard.ps1`.
 3. The browser opens at http://127.0.0.1:8555.
 4. Optional refresh from the UI, or run `python -m app.refresh` to update
@@ -102,13 +72,14 @@ gitignored and never leave it).
 CSS is prebuilt and committed in `app/static/app.css`. Only rebuild it after
 changing Tailwind classes in templates.
 
-Manual dashboard edits do not rewrite the Excel file. They are stored in the
-private SQLite DB at `data/investor_os.sqlite` and layered over the ICICI import.
-If the weekly Excel later includes the same `(ISIN, member)` as a manual row,
-the Excel lot wins and the manual row is ignored in totals.
+Holdings are file-only in the dashboard. The source of truth is
+`data/holdings.xlsx`; old manual holding records may remain in SQLite but are
+ignored for totals and UI.
 
 The one-page owner guide is `README-SIR.md`; the maintenance playbook for
-Claude Code is `CLAUDE.md`. Design and build detail:
+Claude Code is `CLAUDE.md`. For Drive sharing, use
+`PROMPT_FOR_CLAUDE_DASHBOARD.md` and `GOOGLE_DRIVE_HANDOFF.md`. Design/build
+history:
 `docs/superpowers/specs/` and `docs/superpowers/plans/`.
 
 ## Notes

@@ -72,7 +72,6 @@ def create_app() -> Flask:
         rng = request.args.get("range", "6M")
         ctx = vm.overview(pf, member, rng)
         ctx["market_metrics"] = vm.market_metrics(prices.fetch_market_quotes(vm.MARKET_METRIC_SYMBOLS))
-        ctx["watchlist_preview"] = vm.watchlist_preview(DATA, member)
         ctx.update(vm.common(pf, "overview", member))
         ctx["page"] = "Overview"
         ctx["empty"] = False

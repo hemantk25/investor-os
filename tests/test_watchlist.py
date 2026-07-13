@@ -32,6 +32,24 @@ def test_tradingview_text_roundtrip(tmp_path):
     assert "NSE:RELIANCE" in exported
 
 
+def test_replace_watchlist_items_updates_named_private_list(tmp_path):
+    count = wmod.replace_watchlist_items(
+        tmp_path,
+        "US",
+        "US Stocks",
+        ["NASDAQ:NFLX", "NASDAQ:AAPL"],
+    )
+    assert count == 2
+    lists = wmod.watchlists(tmp_path, market="US")
+    watchlist_id = next(w["id"] for w in lists if w["name"] == "US Stocks")
+    items = wmod.filtered(wmod.load(tmp_path), watchlist_id=watchlist_id)
+    assert [i["symbol"] for i in items] == ["NASDAQ:AAPL", "NASDAQ:NFLX"]
+
+    wmod.replace_watchlist_items(tmp_path, "US", "US Stocks", ["NASDAQ:MSFT"])
+    items = wmod.filtered(wmod.load(tmp_path), watchlist_id=watchlist_id)
+    assert [i["symbol"] for i in items] == ["NASDAQ:MSFT"]
+
+
 def test_open_boards_are_limited_and_closable(tmp_path):
     boards = wmod.open_boards(tmp_path)
     assert boards

@@ -1,21 +1,27 @@
-# Investor OS — How to use (1 page)
+# Investor OS — CEO Handoff Guide
 
-## Every week (2 minutes)
-1. Log in to ICICI Direct → Portfolio → download the holdings Excel (all members).
-2. Drag the file into the `data` folder, replacing `holdings.xlsx`.
-3. Double-click **Start Dashboard** — your browser opens at http://127.0.0.1:8555 with everything updated.
-4. Click **Refresh local data** on Overview if you want fresh watchlist prices,
-   portfolio snapshots, news, and goal metadata immediately.
+This is a local dashboard. It is not deployed, and the financial files stay in
+this folder.
+
+## Each Use
+1. Download the latest ICICI Direct holdings export.
+2. Put it here, replacing `data/holdings.xlsx`.
+3. Optional: replace `data/advisory.xlsx` if there is a new advisory report.
+4. Double-click **start-dashboard.ps1** on Windows.
+5. Open http://127.0.0.1:8555 if the browser does not open automatically.
+6. Click **Refresh local data** on Overview when you want prices, watchlists,
+   portfolio snapshots, news, and goal metadata refreshed immediately.
 
 ## Every morning (optional)
-Open the dashboard → **Morning Brief** → click **⚡ Generate Morning Brief**.
-Claude reads your rules, your live portfolio and stored news, then writes your brief.
+Open **Morning Brief** and click **Generate Morning Brief**. Claude reads:
+`data/holdings.xlsx`, `profile/one-pager.md`, stored news, watchlists, and the
+dashboard logic, then writes the brief into `briefs/`.
 
 ## What each page is for
-- **Overview:** market pulse, portfolio KPIs, family/asset allocation, movers, and watchlist preview.
-- **Holdings:** Groww-style holdings view; add manual holdings, edit them, or record sells/reductions without changing the ICICI Excel.
-- **Watchlist:** TradingView-style local watchlist boards for India, US, UAE, Canada, and global symbols, with TXT import/export.
-- **Morning Brief:** generate and read the daily three-part brief: Market Brief, My Stocks, and Impact Notes.
+- **Overview:** market pulse, portfolio KPIs, asset-class split, and family split.
+- **Holdings:** read-only brokerage-style view from `data/holdings.xlsx`.
+- **Watchlist:** TradingView-style local watchlist boards for India, US, UAE, Canada, and global symbols.
+- **Morning Brief:** Market Brief plus portfolio Impact table.
 - **News:** refresh/read market and portfolio-related news with real links.
 - **Rebalance:** track advisory exits, buys, schedule, and status.
 - **Goal:** see progress toward the long-term target, required path, implied CAGR, and large/mid/small-cap discipline.
@@ -23,9 +29,23 @@ Claude reads your rules, your live portfolio and stored news, then writes your b
 ## Switching family members
 The chips at the top — All / PK / CK / NK / DK — switch every number on the page.
 
-## Your goal
-The Goal page creates `data/goal.json` the first time it opens. Change target
-amount, date, SIP, or allocation bands there if your rules change.
+## Google Drive Use
+If this folder is shared in Google Drive, anyone with access to the folder can
+see files inside `data/`, `briefs/`, and `profile/`. Only share the folder with
+people who are allowed to see the portfolio.
+
+Do not upload `.venv`, `.git`, `.pytest_cache`, or `__pycache__` folders. They
+are technical/generated files and make the folder much larger.
+
+## Claude Prompt
+Open `PROMPT_FOR_CLAUDE_DASHBOARD.md`, paste it into Claude Code/Codex from
+inside this folder, and Claude will inspect the latest data, refresh the local
+system, and start the dashboard.
+
+## QR Code Note
+The dashboard currently opens on the same computer at `127.0.0.1:8555`. A QR
+code for phone/tablet access needs a local-network launcher or tunnel. That is
+separate from deployment and can be added later.
 
 ## If something breaks
 Open this folder in Claude Cowork (or type `claude` in Terminal here) and simply

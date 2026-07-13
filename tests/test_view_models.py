@@ -20,12 +20,13 @@ def test_common_members_and_active():
     assert "live prices" in c["freshness"]
 
 
-def test_overview_cards_and_movers():
+def test_overview_cards():
     o = vm.overview(_pf(), None, "6M")
     labels = [c["label"] for c in o["cards"]]
     assert labels == ["Current Value", "Total Investment", "Total Return", "Day P/L",
                       "Cash / Unallocated"]
-    assert o["alloc"] and o["movers"]
+    assert o["alloc"]
+    assert "movers" not in o
     assert o["asset_donut"]["segments"]
     assert o["family_donut"]["title"] == "Family Split"
     assert o["market_metrics"][0]["label"] == "Nifty 50"

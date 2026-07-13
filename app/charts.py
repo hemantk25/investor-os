@@ -1,7 +1,7 @@
 from __future__ import annotations
 from app.portfolio import fmt_short
 
-CHART_COLORS = ["#005c55", "#4f46e5", "#f59e0b", "#3b82f6", "#64748b"]
+CHART_COLORS = ["#9e0906", "#1f2a40", "#c9a96e", "#3b82f6", "#6b7280"]
 _CLASS_ORDER = [("equity", "Direct Equity"), ("mf", "Mutual Funds"), ("gold", "Gold (SGB)"),
                 ("debt", "Debt & FD"), ("cash", "Cash")]
 
@@ -62,7 +62,7 @@ def donut_chart(entries: list[dict]) -> dict:
     values = [e for e in entries if e.get("value", 0) > 0]
     total = sum(e["value"] for e in values)
     if not total:
-        return {"segments": [], "gradient": "#e0e3e1", "total": fmt_short(0)}
+        return {"segments": [], "gradient": "#e4eaf4", "total": fmt_short(0)}
     start = 0.0
     stops = []
     segments = []

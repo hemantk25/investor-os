@@ -35,17 +35,18 @@ def test_snapshot_compact_and_serialisable():
 def test_prompt_contains_rules_and_sections():
     p = build_prompt("MY ONE PAGER RULES", portfolio_snapshot(_pf()), date(2026, 7, 8), [])
     assert "MY ONE PAGER RULES" in p
-    for sec in ["MARKET BRIEF", "MY STOCKS", "IMPACT NOTES"]:
-        assert sec in p
+    assert "## MARKET BRIEF" in p
+    assert "## FUTURE IMPACT SIGNALS" in p
+    assert "## MY STOCKS" not in p
+    assert "## IMPACT NOTES" not in p
     assert "8 July 2026" in p
 
 
 def test_prompt_includes_news_and_contract():
     p = build_prompt("MY ONE PAGER RULES", portfolio_snapshot(_pf()), date(2026, 7, 8), [NEWS_ITEM])
     assert "## MARKET BRIEF" in p
-    assert "## MY STOCKS" in p
-    assert "## IMPACT NOTES" in p
     assert "## FUTURE IMPACT SIGNALS" in p
+    assert "Do NOT write MY STOCKS or IMPACT NOTES" in p
     assert "positive|negative|neutral" in p
     assert NEWS_ITEM["url"] in p
     assert "ONLY" in p

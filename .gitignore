@@ -7,9 +7,11 @@ report_data/
 # Local working files
 .firecrawl/
 .venv/
+.pytest_cache/
 __pycache__/
 .env
 memory.db
+output/
 
 # Instance data (real financials live here locally — never commit)
 /data/

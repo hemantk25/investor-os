@@ -2,7 +2,7 @@
 {% from "_icons.html" import icon %}
 {% block content %}
 <section class="max-w-4xl flex flex-col gap-stack_lg">
-  <div class="bg-secondary-container rounded-xl p-6 border border-[#E6E9F0] flex gap-4">
+  <div class="bg-secondary-container rounded-xl p-6 border border-[#D8DEEA] flex gap-4">
     <div class="w-11 h-11 rounded-full bg-primary text-white flex items-center justify-center flex-shrink-0">
       {{ icon('person') }}
     </div>
@@ -12,7 +12,7 @@
     </div>
   </div>
 
-  <article class="bg-surface rounded-xl p-8 md:p-10 shadow-card border border-[#E6E9F0]">
+  <article class="bg-surface rounded-xl p-8 md:p-10 shadow-card border border-[#D8DEEA]">
     {% if has_profile %}
     <div class="doc-body">{{ profile_html | safe }}</div>
     {% else %}
@@ -38,7 +38,7 @@
           <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Save the result as <code>profile/one-pager.md</code> and refresh this page.</p>
         </div>
       </div>
-      <div class="rounded-lg border border-[#E6E9F0] p-5">
+      <div class="rounded-lg border border-[#D8DEEA] p-5">
         <h3 class="font-h3 text-h3 text-primary">Expected sections</h3>
         <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3 font-body-sm text-body-sm text-on-surface-variant">
           <p>North Star</p>

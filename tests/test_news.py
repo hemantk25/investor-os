@@ -60,6 +60,29 @@ def test_save_merges_market_tags_for_duplicate_url(tmp_path):
     assert news.load_items(tmp_path, market="US")
 
 
+def test_quality_filter_collapses_repeated_old_quarter_results(tmp_path):
+    items = [
+        {"title": "Surya Roshni Q2 earnings announced", "url": "https://example.com/surya-q2",
+         "publisher": "Mint", "published_at": "2026-07-11T02:00:00", "market": "India",
+         "markets": ["India"], "isin": None, "holding_name": None},
+        {"title": "Surya Roshni Q3 results: profit rises", "url": "https://example.com/surya-q3",
+         "publisher": "Mint", "published_at": "2026-07-11T03:00:00", "market": "India",
+         "markets": ["India"], "isin": None, "holding_name": None},
+        {"title": "Surya Roshni Q4 results: revenue update", "url": "https://example.com/surya-q4",
+         "publisher": "Business Standard", "published_at": "2026-07-11T01:00:00",
+         "market": "India", "markets": ["India"], "isin": None, "holding_name": None},
+        {"title": "Nifty ends higher as banks rally", "url": "https://example.com/nifty",
+         "publisher": "Reuters", "published_at": "2026-07-11T04:00:00", "market": "India",
+         "markets": ["India"], "isin": None, "holding_name": None},
+    ]
+    assert news.save_items(tmp_path, items) == 4
+    loaded = news.load_items(tmp_path, market="India", limit=10)
+    titles = [i["title"] for i in loaded]
+    assert sum("Surya Roshni" in t for t in titles) == 1
+    assert "Surya Roshni Q4 results: revenue update" in titles
+    assert "Nifty ends higher as banks rally" in titles
+
+
 def test_load_filters(tmp_path):
     parsed = feedparser.parse(RSS)
     market_items = news.normalize_entries(parsed, market="India", isin=None, holding_name=None)
@@ -152,6 +175,15 @@ def test_feed_urls():
     us_url = news.market_feed_url("US")
     assert "gl=US" in us_url
     assert "site%3Acnbc.com" in us_url or "site%3ACNBC" in us_url
+    assert "site%3Amorningstar.com" in us_url
+
+    india_url = news.market_feed_url("India")
+    assert "site%3Alivemint.com" in india_url
+    assert "site%3Amoneycontrol.com" in india_url
+    canada_url = news.market_feed_url("Canada")
+    assert "site%3Abnnbloomberg.ca" in canada_url
+    uae_url = news.market_feed_url("UAE")
+    assert "site%3Akhaleejtimes.com" in uae_url
 
     holding_url = news.holding_feed_url("Tata Power")
     assert "%22Tata+Power%22" in holding_url

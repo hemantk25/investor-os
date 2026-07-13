@@ -3,7 +3,7 @@
 {% block content %}
 {% if empty %}
 <div class="flex-1 flex items-center justify-center py-24">
-  <div class="flex flex-col items-center justify-center text-center bg-surface rounded-xl p-12 shadow-card border border-[#E6E9F0] max-w-lg">
+  <div class="flex flex-col items-center justify-center text-center bg-surface rounded-xl p-12 shadow-card border border-[#D8DEEA] max-w-lg">
     <div class="w-16 h-16 rounded-full bg-secondary-container flex items-center justify-center mb-4 text-primary">
       {{ icon('download') }}
     </div>
@@ -23,7 +23,7 @@
   <!-- KPI Cards -->
   <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-gutter">
     {% for c in kpis %}
-    <div class="bg-surface rounded-xl p-6 shadow-card border border-[#E6E9F0] flex flex-col gap-2 hover:shadow-card-hover hover:border-primary/30 transition-all cursor-default">
+    <div class="bg-surface rounded-xl p-6 shadow-card border border-[#D8DEEA] flex flex-col gap-2 hover:shadow-card-hover hover:border-primary/30 transition-all cursor-default">
       <h3 class="font-body-sm text-body-sm text-on-surface-variant font-medium">{{ c.label }}</h3>
       <div class="mt-2 flex flex-col">
         <span class="{% if loop.first %}font-h1 text-h1{% else %}font-number-display text-number-display{% endif %} {% if c.tone == 'up' %}text-status-success{% elif c.tone == 'down' %}text-status-error{% else %}text-on-surface{% endif %}">{{ c.value }}</span>
@@ -46,7 +46,7 @@
   </div>
 
   <!-- Goal Trajectory Chart -->
-  <div class="bg-surface rounded-xl p-6 shadow-card border border-[#E6E9F0] flex flex-col">
+  <div class="bg-surface rounded-xl p-6 shadow-card border border-[#D8DEEA] flex flex-col">
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-5">
       <div>
         <h2 class="font-h3 text-h3 text-on-surface">Goal Trajectory</h2>
@@ -78,7 +78,7 @@
 
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter">
     <!-- Market-Cap Bands -->
-    <div class="bg-surface rounded-xl p-6 shadow-card border border-[#E6E9F0] flex flex-col gap-5">
+    <div class="bg-surface rounded-xl p-6 shadow-card border border-[#D8DEEA] flex flex-col gap-5">
       <div class="flex items-center justify-between">
         <h2 class="font-h3 text-h3 text-on-surface">Market-Cap Bands</h2>
         {% if bands.small_breach %}
@@ -105,7 +105,7 @@
     </div>
 
     <!-- Compliance Checklist -->
-    <div class="bg-surface rounded-xl p-6 shadow-card border border-[#E6E9F0] flex flex-col gap-4">
+    <div class="bg-surface rounded-xl p-6 shadow-card border border-[#D8DEEA] flex flex-col gap-4">
       <h2 class="font-h3 text-h3 text-on-surface">Compliance Checklist</h2>
       <div class="flex flex-col gap-2">
         {% for rule in compliance %}
@@ -124,7 +124,7 @@
   </div>
 
   {% if profile_link %}
-  <a href="/profile" class="flex items-center justify-between bg-surface rounded-xl p-4 shadow-card border border-[#E6E9F0] hover:border-primary/30 transition-colors group">
+  <a href="/profile" class="flex items-center justify-between bg-surface rounded-xl p-4 shadow-card border border-[#D8DEEA] hover:border-primary/30 transition-colors group">
     <span class="font-body-sm text-body-sm text-on-surface-variant">Bands, compliance rules, and the full investor profile live in one place.</span>
     <span class="font-body-sm text-body-sm font-medium text-primary group-hover:underline shrink-0 ml-4">View your full rules &rarr;</span>
   </a>

@@ -42,15 +42,22 @@ def client(tmp_path, monkeypatch):
 def test_overview_ok(client):
     r = client.get("/")
     assert r.status_code == 200
+    html = r.data.decode()
     assert b"Market Pulse" in r.data
-    assert b"Nifty 50" in r.data
+    assert "xl:grid-cols-5" in html
+    assert "overflow-x-auto" not in html
+    for label in ("Nifty 50", "Nifty Smallcap", "Nifty Midcap", "Sensex", "DFMGI",
+                  "FADGI", "USD/INR", "Nasdaq", "S&amp;P 500", "TSX Composite"):
+        assert label in html
     assert b"unavailable" in r.data
     assert b"Current Value" in r.data
     assert b"Portfolio Value" not in r.data
     assert b"Portfolio Summary" in r.data
     assert b"Asset-Class Split" in r.data
     assert b"Family Split" in r.data
-    assert b"Watchlist" in r.data
+    assert b"TradingView-compatible local lists" not in r.data
+    assert b"Top Movers" not in r.data
+    assert "Today\u2019s Movers" not in html
 
 
 def test_sidebar_can_collapse(client):
@@ -246,6 +253,39 @@ def test_brief_impact_columns(client):
     assert r.status_code == 200
     for label in (b"Daily Gains", b"Value Change", b"Holdings Value", b"Future Impact"):
         assert label in r.data
+
+
+def test_brief_hides_old_my_stocks_and_impact_notes(client, monkeypatch):
+    import app.server as srv
+    from app import storage
+
+    briefs = client.data_dir / "briefs"
+    briefs.mkdir(exist_ok=True)
+    (briefs / "2026-07-11.md").write_text(
+        "## MARKET BRIEF\nVisible market note.\n\n"
+        "## MY STOCKS\nShould be hidden.\n\n"
+        "## IMPACT NOTES\nMeasured prose should be hidden.\n",
+        encoding="utf-8",
+    )
+    with storage.connect(client.data_dir) as con:
+        con.execute(
+            """
+            INSERT INTO news_items(url_hash, title, url, publisher, published_at, market,
+                                    markets, isin, holding_name, fetched_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            ("impact-old-brief", "Alpha earnings boost", "https://example.com/old-impact",
+             "Mint", None, "India", '["India"]', "INE001A01001",
+             "Alpha Motors", storage.now_iso()),
+        )
+        con.commit()
+    monkeypatch.setattr(srv, "BASE", client.data_dir)
+
+    html = client.get("/brief?pick=2026-07-11").data.decode()
+    assert "Visible market note" in html
+    assert "Should be hidden" not in html
+    assert "Measured prose should be hidden" not in html
+    assert "Impact" in html
 
 
 def test_brief_generate_redirects(client):

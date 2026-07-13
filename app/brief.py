@@ -75,13 +75,11 @@ NEWS (cite ONLY these urls as markdown links):
 Write today's MORNING BRIEF in markdown with EXACTLY these sections:
 ## MARKET BRIEF — market-moving stories for this India-heavy book; 2-3 lines each, and a
 markdown link to the source for each story, citing ONLY urls listed in the NEWS block above.
-## MY STOCKS — news about held stocks; a markdown link for each item, citing ONLY urls listed
-in the NEWS block above.
-## IMPACT NOTES — 2-3 lines interpreting the measured day moves already present in the
-CURRENT PORTFOLIO data above. Do NOT invent numbers; use ONLY the day_pct/value figures given.
 ## FUTURE IMPACT SIGNALS — output ONLY a JSON array in a fenced json block. Each item must be
 {{"isin":"...", "name":"...", "signal":"positive|negative|neutral", "reason":"5-10 words"}}.
 Use only stocks present in CURRENT PORTFOLIO and only the three signal values.
+Do NOT write MY STOCKS or IMPACT NOTES sections; the dashboard renders the measured impact
+table separately from CURRENT PORTFOLIO and NEWS.
 Direct, no fluff, no disclaimers beyond one line. All amounts in ₹ lakh/crore format. Cite
 ONLY the urls listed in the NEWS block — never fabricate a link."""
 

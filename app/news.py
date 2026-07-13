@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import socket
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -81,6 +82,17 @@ SOURCES = {
     ],
 }
 
+_TITLE_SOURCE_SUFFIX_RE = re.compile(r"\s+[-–|]\s+[^-–|]{2,80}$")
+_QUARTER_RE = re.compile(r"\b(?:q([1-4])|quarter\s*([1-4]))\b", re.IGNORECASE)
+_EARNINGS_RE = re.compile(
+    r"\b(q[1-4]|quarter\s*[1-4]|quarterly|results?|earnings?|profit|revenue)\b",
+    re.IGNORECASE,
+)
+_SPLIT_EARNINGS_RE = re.compile(
+    r"\b(q[1-4]|quarter\s*[1-4]|quarterly|results?|earnings?|profit|revenue|share price)\b",
+    re.IGNORECASE,
+)
+
 
 def _source_clause(market: str) -> str:
     terms = []
@@ -153,6 +165,68 @@ def _decode_markets(value: str | None, fallback: str | None = None) -> list[str]
         except Exception:
             pass
     return _ordered([fallback] if fallback else [])
+
+
+def _clean_title(title: str) -> str:
+    text = _TITLE_SOURCE_SUFFIX_RE.sub("", (title or "").lower())
+    text = re.sub(r"[^a-z0-9]+", " ", text)
+    return " ".join(text.split())
+
+
+def _earnings_company_key(title: str) -> str:
+    if not _EARNINGS_RE.search(title or ""):
+        return ""
+    head = _SPLIT_EARNINGS_RE.split(title or "", maxsplit=1)[0]
+    head = re.sub(r"\b(today|live|updates?|stock|shares?|price|market)\b", " ", head,
+                  flags=re.IGNORECASE)
+    words = _clean_title(head).split()
+    return " ".join(words[:6])
+
+
+def _quarter_score(title: str) -> int:
+    scores = {"1": 4, "4": 3, "3": 2, "2": 1}
+    found = [scores.get(a or b, 0) for a, b in _QUARTER_RE.findall(title or "")]
+    if found:
+        return max(found)
+    if _EARNINGS_RE.search(title or ""):
+        return 5
+    return 0
+
+
+def _news_score(item: dict, original_index: int) -> tuple:
+    return (
+        1 if item.get("holding_name") else 0,
+        _quarter_score(item.get("title") or ""),
+        item.get("published_at") or item.get("fetched_at") or "",
+        -original_index,
+    )
+
+
+def quality_filter_items(items: list[dict], limit: int = 50) -> list[dict]:
+    seen_titles: set[str] = set()
+    normal_items: list[tuple[int, dict]] = []
+    earnings_groups: dict[str, tuple[int, dict]] = {}
+
+    for idx, item in enumerate(items):
+        title_key = _clean_title(item.get("title") or "")
+        if item.get("holding_name"):
+            title_key = f"{title_key}|holding:{item.get('isin') or item.get('holding_name')}"
+        if title_key and title_key in seen_titles:
+            continue
+        if title_key:
+            seen_titles.add(title_key)
+
+        company_key = _earnings_company_key(item.get("title") or "")
+        if company_key:
+            current = earnings_groups.get(company_key)
+            if current is None or _news_score(item, idx) > _news_score(current[1], current[0]):
+                earnings_groups[company_key] = (idx, item)
+            continue
+        normal_items.append((idx, item))
+
+    combined = normal_items + list(earnings_groups.values())
+    combined.sort(key=lambda row: row[0])
+    return [item for _, item in combined[:limit]]
 
 
 def normalize_entries(parsed, market: str, isin: str | None, holding_name: str | None) -> list[dict]:
@@ -313,7 +387,8 @@ def load_items(data_dir: Path, market: str | None = None, mine: bool = False,
         conditions.append("fetched_at >= ?")
         params.append(cutoff)
     where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
-    params.append(limit)
+    fetch_limit = limit if limit > 500 else max(limit * 3, 100)
+    params.append(fetch_limit)
     with storage.connect(data_dir) as con:
         rows = con.execute(
             f"""
@@ -329,7 +404,7 @@ def load_items(data_dir: Path, market: str | None = None, mine: bool = False,
         item = dict(row)
         item["markets_list"] = _decode_markets(item.get("markets"), item.get("market"))
         out.append(item)
-    return out
+    return quality_filter_items(out, limit)
 
 
 def prune(data_dir: Path) -> int:

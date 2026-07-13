@@ -103,10 +103,7 @@ def overview(pf, member, rng: str) -> dict:
          "sub": f"{(t.extras_by_class.get('cash', 0.0)/t.total_value*100 if t.total_value else 0):.1f}% of portfolio",
          "tone": "muted"},
     ]
-    movers = [{"name": c.name.title(), "pct": pmod.fmt_pct(c.day_pct),
-               "up": (c.day_pct or 0) >= 0, "short": pmod.fmt_short(c.value)}
-              for c in pf.movers(member)]
-    return {"cards": cards, "alloc": charts.alloc_segments(t), "movers": movers,
+    return {"cards": cards, "alloc": charts.alloc_segments(t),
             "range": rng, "ranges": list(RANGE_TO_PERIOD),
             "market_metrics": market_metrics(),
             "asset_donut": _asset_donut(t), "family_donut": _family_donut(pf, member),

@@ -58,7 +58,7 @@ try {
     </a>
     {% endfor %}
   </nav>
-  <button id="sidebarToggle" type="button" class="mt-4 flex items-center justify-center gap-2 rounded-lg border border-[#E6E9F0] px-3 py-2 text-sm font-medium text-on-surface-variant hover:text-primary hover:border-primary/40" aria-label="Toggle sidebar">
+  <button id="sidebarToggle" type="button" class="mt-4 flex items-center justify-center gap-2 rounded-lg border border-[#D8DEEA] px-3 py-2 text-sm font-medium text-on-surface-variant hover:text-primary hover:border-primary/40" aria-label="Toggle sidebar">
     <span id="sidebarToggleIcon" class="inline-block transition-transform">&lt;</span>
     <span class="sidebar-label">Collapse</span>
   </button>
@@ -72,7 +72,7 @@ try {
       {% if freshness %}<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">{{ freshness }}</p>{% endif %}
     </div>
     <!-- Member Switcher -->
-    <div class="flex items-center bg-[#E6F4F1] rounded-full p-1 border border-[#E6E9F0]">
+    <div class="flex items-center bg-[#F6EDEB] rounded-full p-1 border border-[#D8DEEA]">
       {% for m in ['All'] + members %}
       {% set is_selected = (m == 'All' and not member) or (member == m) %}
       <a href="{{ request.path }}{% if m != 'All' %}?member={{ m }}{% endif %}" class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors {% if is_selected %}bg-primary text-white{% else %}text-primary hover:bg-white/50{% endif %}">{{ m }}</a>

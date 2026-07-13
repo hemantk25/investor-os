@@ -3,7 +3,7 @@
 {% block content %}
 {% if empty %}
 <div class="flex-1 flex items-center justify-center py-24">
-  <div class="flex flex-col items-center justify-center text-center bg-surface rounded-xl p-12 shadow-card border border-[#E6E9F0] max-w-lg">
+  <div class="flex flex-col items-center justify-center text-center bg-surface rounded-xl p-12 shadow-card border border-[#D8DEEA] max-w-lg">
     <div class="w-16 h-16 rounded-full bg-secondary-container flex items-center justify-center mb-4 text-primary">
       {{ icon('download') }}
     </div>
@@ -15,7 +15,7 @@
 <section class="flex flex-col gap-stack_lg">
   <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_300px] gap-gutter">
     <div class="flex flex-col gap-stack_lg">
-      <div class="bg-surface rounded-xl p-6 shadow-card border border-[#E6E9F0] flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div class="bg-surface rounded-xl p-6 shadow-card border border-[#D8DEEA] flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h2 class="font-h3 text-h3 text-on-surface">AI Morning Brief</h2>
           <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Claude reads the one-pager, current portfolio, and overnight markets.</p>
@@ -36,19 +36,19 @@
       {% endif %}
 
       {% if not claude_ok %}
-      <div class="rounded-xl border border-[#E6E9F0] bg-surface p-5 text-on-surface-variant">
+      <div class="rounded-xl border border-[#D8DEEA] bg-surface p-5 text-on-surface-variant">
         <h3 class="font-h3 text-h3 text-on-surface">Claude CLI not detected</h3>
         <p class="font-body-sm text-body-sm mt-1">Install and log in to Claude Code, or open this folder in Claude Cowork and ask it to write today's brief to <code>briefs/</code>.</p>
       </div>
       {% endif %}
 
-      <article class="bg-surface rounded-xl p-8 shadow-card border border-[#E6E9F0] min-h-[420px]">
+      <article class="bg-surface rounded-xl p-8 shadow-card border border-[#D8DEEA] min-h-[420px]">
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
           <h2 class="font-h3 text-h3 text-on-surface">Brief</h2>
           {% if dates %}
           <form method="get" action="/brief">
             {% if member %}<input type="hidden" name="member" value="{{ member }}">{% endif %}
-            <select name="pick" onchange="this.form.submit()" class="rounded-lg border border-[#E6E9F0] bg-white px-3 py-2 font-body-sm text-body-sm text-on-surface">
+            <select name="pick" onchange="this.form.submit()" class="rounded-lg border border-[#D8DEEA] bg-white px-3 py-2 font-body-sm text-body-sm text-on-surface">
               {% for d in dates %}
               <option value="{{ d }}" {% if d == chosen %}selected{% endif %}>{{ d }}</option>
               {% endfor %}
@@ -66,12 +66,6 @@
             <div class="doc-body">{{ sections.market_brief | safe }}</div>
           </div>
           {% endif %}
-          {% if sections.my_stocks %}
-          <div>
-            <h3 class="font-h3 text-h3 text-on-surface mb-3">My Stocks</h3>
-            <div class="doc-body">{{ sections.my_stocks | safe }}</div>
-          </div>
-          {% endif %}
         </div>
         {% else %}
         <div class="flex flex-col items-center justify-center text-center py-20">
@@ -84,12 +78,12 @@
     </div>
 
     <aside class="flex flex-col gap-gutter">
-      <div class="bg-surface rounded-xl p-6 shadow-card border border-[#E6E9F0]">
+      <div class="bg-surface rounded-xl p-6 shadow-card border border-[#D8DEEA]">
         <div class="flex items-center justify-between mb-4">
           <h2 class="font-h3 text-h3 text-on-surface">Key Indices</h2>
           <span class="rounded-full bg-surface-container-low px-2 py-0.5 text-xs text-outline">sample</span>
         </div>
-        <div class="flex flex-col divide-y divide-[#E6E9F0]">
+        <div class="flex flex-col divide-y divide-[#D8DEEA]">
           {% for name, move in [('Nifty 50', '+0.2%'), ('Sensex', '+0.1%'), ('Nasdaq', '-0.4%')] %}
           <div class="flex justify-between py-3">
             <span class="font-body-sm text-body-sm text-on-surface">{{ name }}</span>
@@ -101,14 +95,14 @@
     </aside>
   </div>
 
-  {% if impact or sections.impact_notes %}
-  <article class="bg-surface rounded-xl p-8 shadow-card border border-[#E6E9F0]">
+  {% if impact %}
+  <article class="bg-surface rounded-xl p-8 shadow-card border border-[#D8DEEA]">
     <h2 class="font-h3 text-h3 text-on-surface mb-6">Impact</h2>
     {% if impact %}
     <div class="overflow-x-auto">
       <table class="w-full min-w-[980px] font-body-sm text-body-sm">
         <thead>
-          <tr class="text-left text-on-surface-variant border-b border-[#E6E9F0]">
+          <tr class="text-left text-on-surface-variant border-b border-[#D8DEEA]">
             <th class="py-2 pr-5 font-medium w-[15%]">Holding</th>
             <th class="py-2 pr-5 font-medium w-[37%]">Headline</th>
             <th class="py-2 pr-5 font-medium text-right">Daily Gains</th>
@@ -119,7 +113,7 @@
         </thead>
         <tbody>
           {% for row in impact %}
-          <tr class="border-b border-[#E6E9F0] last:border-0">
+          <tr class="border-b border-[#D8DEEA] last:border-0">
             <td class="py-3 pr-5 font-medium text-on-surface">{{ row.name }}</td>
             <td class="py-3 pr-5">
               <a href="{{ row.url }}" target="_blank" rel="noopener" class="text-primary hover:underline">{{ row.headline }}</a>
@@ -139,9 +133,6 @@
         </tbody>
       </table>
     </div>
-    {% endif %}
-    {% if sections.impact_notes %}
-    <div class="doc-body mt-6">{{ sections.impact_notes | safe }}</div>
     {% endif %}
   </article>
   {% endif %}

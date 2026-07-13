@@ -2,7 +2,7 @@
 {% from "_icons.html" import icon %}
 {% block content %}
 <section class="flex flex-col gap-gutter">
-  <div class="bg-surface rounded-xl shadow-card border border-[#E6E9F0] p-6">
+  <div class="bg-surface rounded-xl shadow-card border border-[#D8DEEA] p-6">
     <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5">
       <div>
         <h2 class="font-h3 text-h3 text-on-surface">Watchlist Workspace</h2>
@@ -15,7 +15,7 @@
 
     <div class="mt-6 flex flex-wrap gap-2">
       {% for m in watch_markets %}
-      <a href="/watchlist?market={{ m }}{% if member %}&member={{ member }}{% endif %}" class="rounded-full px-5 py-2 text-sm font-medium border transition-all {% if active_market == m %}bg-primary text-white border-primary shadow-sm{% else %}bg-white text-on-surface-variant border-[#E6E9F0] hover:text-primary hover:border-primary/40{% endif %}">
+      <a href="/watchlist?market={{ m }}{% if member %}&member={{ member }}{% endif %}" class="rounded-full px-5 py-2 text-sm font-medium border transition-all {% if active_market == m %}bg-primary text-white border-primary shadow-sm{% else %}bg-white text-on-surface-variant border-[#D8DEEA] hover:text-primary hover:border-primary/40{% endif %}">
         {{ m }}
         <span class="{% if active_market == m %}text-white/75{% else %}text-outline{% endif %}">· {{ lists_by_market[m]|length }}</span>
       </a>
@@ -24,7 +24,7 @@
 
     <div class="mt-5 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
       {% for wl in active_watchlists %}
-      <form method="post" action="/watchlist/boards" class="rounded-xl border border-[#E6E9F0] bg-surface-container-low/50 p-4 hover:border-primary/40 hover:bg-white transition-colors">
+      <form method="post" action="/watchlist/boards" class="rounded-xl border border-[#D8DEEA] bg-surface-container-low/50 p-4 hover:border-primary/40 hover:bg-white transition-colors">
         <input type="hidden" name="watchlist_id" value="{{ wl.id }}">
         <input type="hidden" name="market" value="{{ wl.market }}">
         <input type="hidden" name="member" value="{{ wl.member }}">
@@ -39,7 +39,7 @@
         </button>
       </form>
       {% else %}
-      <div class="md:col-span-2 xl:col-span-4 rounded-xl border border-dashed border-[#E6E9F0] bg-surface-container-low/40 p-8 text-center">
+      <div class="md:col-span-2 xl:col-span-4 rounded-xl border border-dashed border-[#D8DEEA] bg-surface-container-low/40 p-8 text-center">
         <h3 class="font-h3 text-h3 text-on-surface">No {{ active_market }} watchlists yet</h3>
         <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Create one from Watchlist settings below.</p>
       </div>
@@ -49,18 +49,18 @@
 
   <div class="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-4 gap-gutter">
     {% for board in boards %}
-    <section class="bg-surface rounded-xl shadow-card border border-[#E6E9F0] min-w-0 overflow-hidden">
-      <div class="p-4 border-b border-[#E6E9F0] flex items-start justify-between gap-3">
+    <section class="bg-surface rounded-xl shadow-card border border-[#D8DEEA] min-w-0 overflow-hidden">
+      <div class="p-4 border-b border-[#D8DEEA] flex items-start justify-between gap-3">
         <div class="min-w-0">
           <h3 class="font-h3 text-h3 text-on-surface truncate">{{ board.display_title }}</h3>
           <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">{{ board.market }} · {{ board.count }} symbols</p>
         </div>
         <form method="post" action="/watchlist/boards/{{ board.id }}/close">
           <input type="hidden" name="member_filter" value="{{ member or 'All' }}">
-          <button type="submit" class="rounded-full border border-[#E6E9F0] px-2.5 py-1 text-xs font-medium text-on-surface-variant hover:text-status-error hover:border-status-error">Close</button>
+          <button type="submit" class="rounded-full border border-[#D8DEEA] px-2.5 py-1 text-xs font-medium text-on-surface-variant hover:text-status-error hover:border-status-error">Close</button>
         </form>
       </div>
-      <div class="max-h-[620px] overflow-auto divide-y divide-[#E6E9F0] bg-[#FAFBFC]">
+      <div class="max-h-[620px] overflow-auto divide-y divide-[#D8DEEA] bg-[#F7F9FC]">
         {% for item in board["items"] %}
         <div class="px-4 py-3 hover:bg-white transition-colors">
           <div class="flex items-center justify-between gap-3">
@@ -92,45 +92,45 @@
     {% endfor %}
   </div>
 
-  <details class="bg-surface rounded-xl shadow-card border border-[#E6E9F0] overflow-hidden">
+  <details class="bg-surface rounded-xl shadow-card border border-[#D8DEEA] overflow-hidden">
     <summary class="cursor-pointer p-5 font-h3 text-h3 text-on-surface">Watchlist settings</summary>
-    <div class="border-t border-[#E6E9F0] p-6 grid grid-cols-1 xl:grid-cols-3 gap-gutter">
-      <form method="post" action="/watchlist/lists" class="rounded-xl border border-[#E6E9F0] p-5 flex flex-col gap-3">
+    <div class="border-t border-[#D8DEEA] p-6 grid grid-cols-1 xl:grid-cols-3 gap-gutter">
+      <form method="post" action="/watchlist/lists" class="rounded-xl border border-[#D8DEEA] p-5 flex flex-col gap-3">
         <h3 class="font-h3 text-h3 text-on-surface">Create Watchlist</h3>
-        <input name="name" required placeholder="List name" class="rounded-lg border border-[#E6E9F0] bg-white px-3 py-2.5 font-body-sm text-body-sm outline-none focus:border-primary">
-        <select name="market" class="rounded-lg border border-[#E6E9F0] bg-white px-3 py-2.5 font-body-sm text-body-sm outline-none focus:border-primary">
+        <input name="name" required placeholder="List name" class="rounded-lg border border-[#D8DEEA] bg-white px-3 py-2.5 font-body-sm text-body-sm outline-none focus:border-primary">
+        <select name="market" class="rounded-lg border border-[#D8DEEA] bg-white px-3 py-2.5 font-body-sm text-body-sm outline-none focus:border-primary">
           {% for m in watch_markets %}<option value="{{ m }}" {% if m == active_market %}selected{% endif %}>{{ m }}</option>{% endfor %}
         </select>
         <input type="hidden" name="member" value="{{ member or 'All' }}">
         <button type="submit" class="rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-primary/90">Create</button>
       </form>
 
-      <form method="post" action="/watchlist/items" class="rounded-xl border border-[#E6E9F0] p-5 flex flex-col gap-3">
+      <form method="post" action="/watchlist/items" class="rounded-xl border border-[#D8DEEA] p-5 flex flex-col gap-3">
         <h3 class="font-h3 text-h3 text-on-surface">Add Symbol</h3>
-        <select name="watchlist_id" required class="rounded-lg border border-[#E6E9F0] bg-white px-3 py-2.5 font-body-sm text-body-sm outline-none focus:border-primary">
+        <select name="watchlist_id" required class="rounded-lg border border-[#D8DEEA] bg-white px-3 py-2.5 font-body-sm text-body-sm outline-none focus:border-primary">
           {% for wl in watchlists %}<option value="{{ wl.id }}">{{ wl.market }} · {{ wl.name }}</option>{% endfor %}
         </select>
-        <input name="symbol" required placeholder="Exchange:Symbol" class="rounded-lg border border-[#E6E9F0] bg-white px-3 py-2.5 font-body-sm text-body-sm outline-none focus:border-primary">
-        <input name="name" placeholder="Display name" class="rounded-lg border border-[#E6E9F0] bg-white px-3 py-2.5 font-body-sm text-body-sm outline-none focus:border-primary">
+        <input name="symbol" required placeholder="Exchange:Symbol" class="rounded-lg border border-[#D8DEEA] bg-white px-3 py-2.5 font-body-sm text-body-sm outline-none focus:border-primary">
+        <input name="name" placeholder="Display name" class="rounded-lg border border-[#D8DEEA] bg-white px-3 py-2.5 font-body-sm text-body-sm outline-none focus:border-primary">
         <input type="hidden" name="member" value="{{ member or 'All' }}">
         <button type="submit" class="rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-primary/90">Add Symbol</button>
       </form>
 
-      <form method="post" action="/watchlist/import" enctype="multipart/form-data" class="rounded-xl border border-[#E6E9F0] p-5 flex flex-col gap-3">
+      <form method="post" action="/watchlist/import" enctype="multipart/form-data" class="rounded-xl border border-[#D8DEEA] p-5 flex flex-col gap-3">
         <h3 class="font-h3 text-h3 text-on-surface">Import TXT</h3>
-        <select name="watchlist_id" required class="rounded-lg border border-[#E6E9F0] bg-white px-3 py-2.5 font-body-sm text-body-sm outline-none focus:border-primary">
+        <select name="watchlist_id" required class="rounded-lg border border-[#D8DEEA] bg-white px-3 py-2.5 font-body-sm text-body-sm outline-none focus:border-primary">
           {% for wl in watchlists %}<option value="{{ wl.id }}">{{ wl.market }} · {{ wl.name }}</option>{% endfor %}
         </select>
-        <textarea name="symbols" rows="4" placeholder="NSE:TCS,NASDAQ:AAPL,DFM:DFMGI" class="rounded-lg border border-[#E6E9F0] bg-white px-3 py-2.5 font-body-sm text-body-sm outline-none focus:border-primary"></textarea>
+        <textarea name="symbols" rows="4" placeholder="NSE:TCS,NASDAQ:AAPL,DFM:DFMGI" class="rounded-lg border border-[#D8DEEA] bg-white px-3 py-2.5 font-body-sm text-body-sm outline-none focus:border-primary"></textarea>
         <input name="file" type="file" accept=".txt,text/plain" class="font-body-sm text-body-sm text-on-surface-variant">
         <input type="hidden" name="member" value="{{ member or 'All' }}">
         <button type="submit" class="rounded-lg bg-on-surface px-4 py-2.5 text-sm font-medium text-white hover:bg-on-surface/90">Import Symbols</button>
       </form>
 
       <div class="xl:col-span-3 grid grid-cols-1 xl:grid-cols-2 gap-gutter">
-        <div class="rounded-xl border border-[#E6E9F0] p-5">
+        <div class="rounded-xl border border-[#D8DEEA] p-5">
           <h3 class="font-h3 text-h3 text-on-surface">Named Watchlists</h3>
-          <div class="mt-4 max-h-[360px] overflow-auto divide-y divide-[#E6E9F0]">
+          <div class="mt-4 max-h-[360px] overflow-auto divide-y divide-[#D8DEEA]">
             {% for wl in watchlists %}
             <div class="py-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
               <div class="min-w-0">
@@ -138,10 +138,10 @@
                 <div class="text-xs text-on-surface-variant">{{ wl.count }} symbols</div>
               </div>
               <div class="flex flex-wrap gap-2">
-                <a href="/watchlist/export?watchlist_id={{ wl.id }}" class="rounded-full border border-[#E6E9F0] px-3 py-1 text-xs font-medium text-on-surface-variant hover:text-primary">Export</a>
+                <a href="/watchlist/export?watchlist_id={{ wl.id }}" class="rounded-full border border-[#D8DEEA] px-3 py-1 text-xs font-medium text-on-surface-variant hover:text-primary">Export</a>
                 <form method="post" action="/watchlist/lists/{{ wl.id }}/rename" class="flex gap-2">
-                  <input name="name" value="{{ wl.name }}" class="w-32 rounded border border-[#E6E9F0] bg-white px-2 py-1 text-xs">
-                  <button type="submit" class="rounded-full border border-[#E6E9F0] px-3 py-1 text-xs font-medium text-on-surface-variant hover:text-primary">Save</button>
+                  <input name="name" value="{{ wl.name }}" class="w-32 rounded border border-[#D8DEEA] bg-white px-2 py-1 text-xs">
+                  <button type="submit" class="rounded-full border border-[#D8DEEA] px-3 py-1 text-xs font-medium text-on-surface-variant hover:text-primary">Save</button>
                 </form>
                 <form method="post" action="/watchlist/lists/{{ wl.id }}/delete">
                   <button type="submit" class="rounded-full border border-status-error/30 px-3 py-1 text-xs font-medium text-status-error">Delete</button>
@@ -152,9 +152,9 @@
           </div>
         </div>
 
-        <div class="rounded-xl border border-[#E6E9F0] p-5">
+        <div class="rounded-xl border border-[#D8DEEA] p-5">
           <h3 class="font-h3 text-h3 text-on-surface">{{ count }} Symbols</h3>
-          <div class="mt-4 max-h-[360px] overflow-auto divide-y divide-[#E6E9F0]">
+          <div class="mt-4 max-h-[360px] overflow-auto divide-y divide-[#D8DEEA]">
             {% for item in items %}
             <div class="py-3 flex items-center justify-between gap-3">
               <div class="min-w-0">
@@ -167,7 +167,7 @@
                 <input type="hidden" name="category_filter" value="{{ watch_category }}">
                 <input type="hidden" name="subcategory_filter" value="{{ watch_subcategory }}">
                 <input type="hidden" name="q_filter" value="{{ q }}">
-                <button class="rounded-full border border-[#E6E9F0] px-2.5 py-1 text-xs font-medium text-on-surface-variant hover:border-status-error hover:text-status-error" type="submit">Remove</button>
+                <button class="rounded-full border border-[#D8DEEA] px-2.5 py-1 text-xs font-medium text-on-surface-variant hover:border-status-error hover:text-status-error" type="submit">Remove</button>
               </form>
             </div>
             {% endfor %}

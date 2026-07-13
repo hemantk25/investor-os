@@ -49,8 +49,8 @@ def _normalise(raw: dict) -> dict:
         "symbol": symbol,
         "name": str(raw.get("name", "")).strip() or symbol,
         "market": _market(raw.get("market")),
-        "category": category if category in CATEGORIES or category in GROUPS else "Custom",
-        "subcategory": subcategory if subcategory in SUBCATEGORIES or subcategory in GROUPS else "Custom",
+        "category": category or "Custom",
+        "subcategory": subcategory or "Custom",
         "member": member,
     }
     item["group"] = item["subcategory"]
@@ -247,6 +247,31 @@ def delete_watchlist(base_dir: Path, watchlist_id: str) -> None:
         con.execute("DELETE FROM watchlist_boards WHERE watchlist_id = ?", (watchlist_id,))
         con.execute("DELETE FROM watchlists WHERE id = ?", (watchlist_id,))
         con.commit()
+
+
+def replace_watchlist_items(base_dir: Path, market: str, name: str, symbols: list[str],
+                            member: str = "All", category: str = "Stocks") -> int:
+    clean_symbols = [str(s or "").strip().upper() for s in symbols if str(s or "").strip()]
+    if not clean_symbols:
+        return 0
+    ensure_seeded(base_dir)
+    with storage.connect(base_dir) as con:
+        watchlist_id = _get_or_create_watchlist(con, market, name, member)
+        con.execute("DELETE FROM watchlist_items WHERE watchlist_id = ?", (watchlist_id,))
+        for symbol in clean_symbols:
+            _insert_item(con, {
+                "watchlist_id": watchlist_id,
+                "symbol": symbol,
+                "name": symbol,
+                "market": market,
+                "category": category,
+                "subcategory": name,
+                "member": member,
+            })
+        con.execute("UPDATE watchlists SET updated_at = ? WHERE id = ?",
+                    (storage.now_iso(), watchlist_id))
+        con.commit()
+    return len(clean_symbols)
 
 
 def get_watchlist(base_dir: Path, watchlist_id: str | int | None) -> dict | None:
@@ -469,6 +494,9 @@ def yahoo_symbol(symbol: str) -> str:
         "NASDAQ:IXIC": "^IXIC",
         "SP:SPX": "^GSPC",
         "TSX:TSX": "^GSPTSE",
+        "DFM:DFMGI": "DFMGI.AE",
+        "ADX:FADGI": "FADGI.AE",
+        "TVC:GOLD": "GC=F",
     }
     if symbol in special:
         return special[symbol]

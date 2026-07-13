@@ -12,6 +12,12 @@
 - **Root cleanup:** video-era reference material moves under `docs/`; the flat
   `data/` becomes a drop-box structure; `report_data/` is retired.
 - **Newest-file-wins ingestion:** the owner never renames a download.
+- **Watchlists: NO TXT drop-box.** TradingView's export needs a premium
+  subscription the owner doesn't have. Instead: the owner screenshots his
+  TradingView watchlist, pastes the image into Claude Code, and says "add this
+  watchlist" — Claude reads the symbols from the screenshot and imports them
+  via a small CLI (`python -m app.watchlist_cli`). Documented in CLAUDE.md +
+  README-SIR as the taught extra step.
 - **One-shot refresh + daily-start prompt:** one command loads everything and
   reports freshness in plain English; a paste-able prompt (and a double-click
   launcher) wraps it.
@@ -36,10 +42,11 @@ stays as a guard.
 data/
   holdings/      # ICICI holdings exports, any *.xlsx name — newest wins
   advisory/      # advisory report exports, any *.xlsx name — newest wins
-  watchlists/    # TradingView watchlist *.txt exports — imported once each
   goal.json extras.json overrides.csv isin-map.csv investor_os.sqlite
   advisory-baseline.json rebalance-status.json        # app-managed, flat
 ```
+(Watchlists live in SQLite only; updates come via the dashboard UI or the
+screenshot→Claude→`watchlist_cli` flow — no file drop-box.)
 
 ## 3. Resolution rules (`app/datafiles.py`, new small module)
 
@@ -47,10 +54,11 @@ data/
   `data/holdings/*` ∪ flat `data/holdings.xlsx` (back-compat — flat file
   competes on mtime). Same for `latest_advisory` (subfolder `advisory/`, flat
   `advisory.xlsx`).
-- `pending_watchlist_txts(data_dir) -> list[Path]`: `data/watchlists/*.txt`
-  whose sha1 is not yet recorded in `app_state` key `watchlist_imported_hashes`
-  (JSON list). After successful import, the hash is recorded (files stay in
-  place; no renaming/moving).
+- `app/watchlist_cli.py` (new, tiny): `python -m app.watchlist_cli import
+  "NSE:RELIANCE,NASDAQ:MSFT" --market India --category Stocks --group Custom`
+  → wraps the existing `watchlist.import_text`; prints how many symbols were
+  added/skipped. This is the command Claude Code runs after reading a
+  watchlist screenshot the owner pastes.
 - Temp/lock files (`~$*`, `.tmp`) are ignored. Empty folders → None/[] and the
   dashboard shows the onboarding card pointing at `data/holdings/`.
 - `app/server.py` and `app/refresh.py` switch from hardcoded
@@ -63,14 +71,12 @@ data/
 Extends the existing `run_refresh` into the single "load everything" step, in
 order, each stage guarded (a failure never aborts the rest):
 1. Resolve newest holdings + advisory (report filenames + file dates).
-2. Import pending watchlist TXTs (existing `watchlist.import_text` logic;
-   idempotent via hash ledger).
-3. `mapping.ensure_map` (existing cache behavior).
-4. Live quotes: holdings symbols + watchlist symbols + `MARKET_METRIC_SYMBOLS`.
-5. Warm price history for the default 6M overview chart.
-6. `goal.refresh_security_meta` (existing).
-7. `news.fetch_all` (existing).
-8. `holdings_ledger.record_snapshot` + `last_refresh` state (existing).
+2. `mapping.ensure_map` (existing cache behavior).
+3. Live quotes: holdings symbols + watchlist symbols + `MARKET_METRIC_SYMBOLS`.
+4. Warm price history for the default 6M overview chart.
+5. `goal.refresh_security_meta` (existing).
+6. `news.fetch_all` (existing).
+7. `holdings_ledger.record_snapshot` + `last_refresh` state (existing).
 
 Returns/prints a **freshness report** (also reused by the dashboard's existing
 freshness lines): holdings file name + file date + rows parsed + rows skipped,
@@ -89,9 +95,11 @@ download"); zero live prices (offline).
   and — when the owner says "I updated the data folder" — do the same flow.
 - **`Daily Start.command`** (mac) + **`daily-start.ps1`** (Windows): refresh →
   launch server → open browser. Mirrors the prompt without Claude.
-- `CLAUDE.md`: mechanism documented (drop-box rules, hash ledger, refresh
-  stages) + playbook entries ("I updated the data folder", "holdings look
-  stale", "watchlist txt didn't import"). Telegram references removed.
+- `CLAUDE.md`: mechanism documented (drop-box rules, refresh stages,
+  watchlist_cli) + playbook entries ("I updated the data folder", "holdings
+  look stale", "owner pastes a watchlist screenshot → read the symbols,
+  normalise to EXCHANGE:SYMBOL, run `python -m app.watchlist_cli import …`,
+  confirm the count"). Telegram references removed.
 - `README-SIR.md`: rewritten as the 3-step ritual (download → drop into the
   matching `data/` subfolder → paste the daily prompt or double-click Daily
   Start). `README.md` roadmap updated (Telegram line removed; Phase 4 = this
@@ -116,7 +124,8 @@ polish pass (separate upcoming wave), multi-broker ingestion.
 
 - `tests/test_datafiles.py`: newest-wins across subfolder+flat, tmp-file
   exclusion, empty → None, corrupt-newest falls back to next-newest (via
-  parse attempt in refresh), TXT hash ledger idempotency.
+  parse attempt in refresh). `watchlist_cli` import test (symbols added,
+  bad input → non-zero exit + message, idempotent re-run reports skipped).
 - `tests/test_refresh.py`: extended — all network mocked; asserts stage
   ordering tolerance (one stage raising doesn't stop others), report fields,
   warning triggers (old file date, high skip ratio).
